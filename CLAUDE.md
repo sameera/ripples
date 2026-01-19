@@ -61,6 +61,8 @@ Entry: `apps/api/src/main.ts` → `apps/api/src/app/app.ts`
 - **Testing**: Vitest 4 (unit), Playwright 1.36 (E2E)
 - **Linting**: ESLint 9 with flat config
 
+For complete stack details, see [docs/system/stack.md](docs/system/stack.md).
+
 ## Code Style
 
 - Use double quotes for strings
@@ -69,10 +71,12 @@ Entry: `apps/api/src/main.ts` → `apps/api/src/app/app.ts`
 - Use semicolons explicitly
 - No AI generation attribution comments
 
-## Configuration Notes
+## Technical Patterns and Standards
 
-- Nx caches tasks based on `namedInputs` in `nx.json`
-- ESLint enforces module boundaries between projects
-- TypeScript uses `composite: true` with project references
-- Vitest uses jsdom environment for web tests
-- API configurable via `PORT` and `HOST` environment variables
+For detailed implementation patterns and conventions, see the [System Documentation](docs/system/):
+
+- **[Fastify API Patterns](docs/system/standards/fastify-api-patterns.md)** - Plugin architecture, route registration, error handling
+- **[React Component Patterns](docs/system/standards/react-component-patterns.md)** - Component structure, in-source testing, styling
+- **[Nx Workspace Patterns](docs/system/standards/nx-workspace-patterns.md)** - Project structure, task configuration, dependencies
+- **[Testing Patterns](docs/system/standards/testing-patterns.md)** - Unit testing, E2E testing, coverage
+- **[TypeScript & Code Quality](docs/system/standards/typescript-quality-patterns.md)** - TypeScript config, ESLint rules, code style
