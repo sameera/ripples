@@ -1,5 +1,6 @@
 ---
 description: Break down a High-Level Design into implementable GitHub issues
+model: sonnet
 tools: Read, Write, Glob, Grep, Task, Skill
 ---
 
@@ -16,15 +17,42 @@ Act as an experienced senior engineer performing technical decomposition and tas
 
 # Input Resolution
 
-**CRITICAL**: Do NOT search for HLD files. Resolve the HLD source as follows:
+**CRITICAL**: Do NOT search for HLD files. Resolve the input source as follows:
 
-1. **If `$ARGUMENTS` contains a file path**: Use that path directly
-2. **If a file is provided in context** (open in editor): Use that file as the HLD
-3. **Otherwise**: Stop and ask the user to either:
+1. **If `$ARGUMENTS` contains a path to `task-review.md`**: Treat as **resume mode** — skip to Step 7
+2. **If `$ARGUMENTS` contains a file path to HLD.md**: Use that path directly
+3. **If a file is provided in context** (open in editor): Use that file as the HLD
+4. **Otherwise**: Stop and ask the user to either:
     - Open the HLD file in their editor and re-run the command, OR
     - Provide the file path as an argument: `/nxs.tasks path/to/HLD.md`
+    - Resume from review: `/nxs.tasks path/to/tasks/task-review.md`
 
 **Never** run `find`, `ls`, or search commands to locate HLD files.
+
+# Resume Mode
+
+When `task-review.md` is provided as input, the command enters **resume mode** to continue from a previous session that stopped at the Review Checkpoint.
+
+## Validation
+
+1. **Verify directory structure**:
+    - Parent directory (of `tasks/`) must contain `epic.md` with `link` attribute (GitHub issue number)
+    - Parent directory must contain `HLD.md`
+    - `tasks/` folder must contain `TASK-*.md` files
+    - If any missing, report error and exit with guidance
+
+2. **Extract epic context**:
+    - Parse `epic.md` frontmatter for `link` attribute → extract issue number
+    - Count existing `TASK-*.md` files in `tasks/` folder
+
+3. **Parse task-review.md for metrics**:
+    - Extract summary metrics (tasks merged, terminology fixes)
+    - Extract severity counts (critical/high/medium/low remaining issues)
+    - Extract coverage percentages if available
+
+4. **Skip to Step 7** (Review Checkpoint) with reconstructed metrics
+
+5. **On user approval**, proceed to Step 8 (Create GitHub Issues)
 
 # Workflow
 
@@ -52,27 +80,26 @@ Read the High-Level Design document and extract:
 
 ## 3. Decompose into Tasks
 
-Apply these decomposition rules:
+Delegate HLD decomposition to `nxs-decomposer`:
 
-**Size Constraint**: Each task must be completable by one engineer in ≤2 days. If larger, decompose further.
+1. Invoke `nxs-decomposer` with:
+    - HLD file path
+    - Epic issue number from Step 1
+    - Request: "Decompose into implementation tasks"
 
-**Consistency Rule**: After completing any task, the system must be in a valid state:
+2. The decomposer will return structured JSON with:
+    - Sequenced tasks (≤2 days each, effort-sized)
+    - Phase/category assignments (Infrastructure, Data Layer, Core Logic, API, Integration, Polish)
+    - Dependency relationships (blocked_by/blocks)
+    - Mermaid dependency graph
+    - Parallelization opportunities
 
-- All tests pass
-- Build succeeds
-- No broken UI elements or dead endpoints
-- No unhandled errors in implemented paths
+3. Validate response:
+    - All tasks have required fields (sequence, title, category, summary, effort, labels)
+    - Dependencies form valid DAG (no cycles)
+    - No task exceeds M size (≤2 days)
 
-**Sequencing**: Identify dependencies and order tasks so each can be implemented without forward references to incomplete work.
-
-**Task Categories** (used for phasing):
-
-1. **Infrastructure/Setup** - Project scaffolding, CI/CD, environment config
-2. **Data Layer** - Models, migrations, repositories
-3. **Core Logic** - Services, business rules, utilities
-4. **API/Interface** - Endpoints, handlers, validation
-5. **Integration** - External services, cross-component wiring
-6. **Polish** - Error handling improvements, logging, documentation
+**Fallback**: If decomposer fails or returns invalid JSON, report error and stop.
 
 ## 4. Generate Low-Level Design per Task via Architect
 
@@ -111,9 +138,10 @@ Task files are generated using the template at `docs/system/delivery/task-templa
 The template uses `{{VARIABLE}}` placeholders. See the template file header at `docs/system/delivery/task-template.md` for complete variable documentation.
 
 **Key runtime-derived variables**:
+
 - `{{WORKSPACE_PATH}}`: Git worktree path format `../<repo-name>-worktrees/<epic-issue-number>`
 - `{{BRANCH}}`: Git branch format `<feat|bug>/<epic-issue-number>-<kebab-case-title>`
-  - Use `bug` type if epic has bug label, otherwise `feat`
+    - Use `bug` type if epic has bug label, otherwise `feat`
 
 ### Label Requirements
 
@@ -139,28 +167,67 @@ For example, if the epic issue number is 23, tasks would be numbered `TASK-23.01
 
 ## 6. Run Consistency Analysis & Auto-Remediation
 
-**MANDATORY**: After generating task files, run `/nxs.analyze {epic-directory} --remediate` to:
+**MANDATORY**: After generating task files, invoke the `nxs-analyzer` agent to validate consistency.
+
+```
+Invoke: nxs-analyzer
+Context:
+  - Epic directory: {epic-directory}
+  - Mode: auto-remediate
+Request:
+  - Run consistency analysis on epic.md, HLD.md, and tasks/*.md
+  - Apply auto-remediation for AUTO-classified findings
+  - Generate tasks/task-review.md
+  - Return metrics summary
+```
+
+The agent will:
+
 1. Identify coverage gaps, inconsistencies, and superfluous tasks
 2. Automatically fix AUTO-classified findings: merge superfluous tasks (barrel/export-only, verification-only, <1hr effort), normalize terminology, renumber sequentially, update dependencies
 3. Generate `tasks/task-review.md` with remediation log and remaining manual issues
-4. Capture metrics: remediated count, remaining issues (CRITICAL/HIGH/MEDIUM/LOW), final task count, coverage %
+4. Return metrics: remediated count, remaining issues (CRITICAL/HIGH/MEDIUM/LOW), final task count, coverage %
 
-See `/nxs.analyze` command documentation for detailed remediation logic.
+**Expected Response** (JSON):
+
+```json
+{
+    "task_review_path": "tasks/task-review.md",
+    "metrics": {
+        "total_findings": N,
+        "auto_remediated": N,
+        "remaining": { "critical": N, "high": N, "medium": N, "low": N },
+        "coverage": { "user_stories": N, "hld_components": N, "nfrs": N },
+        "final_task_count": N
+    },
+    "remediation_applied": { "tasks_merged": N, "terminology_fixes": N },
+    "blocking_issues": boolean
+}
+```
+
+Use these metrics in the Review Checkpoint (Step 7).
 
 ## 7. Review Checkpoint
 
 **MANDATORY STOP** — Wait for user confirmation before creating GitHub issues.
 
+**For fresh runs** (steps 1-6 completed):
 Present summary: {N} tasks generated in `{path}/tasks/`, auto-remediation applied ({X} tasks merged, {Y} terminology fixes), remaining issues ({critical}/{high}/{medium}/{low}), coverage ({X}%). See `task-review.md` for full analysis.
 
+**For resume mode** (task-review.md provided):
+Present summary: "Resuming from previous session. {N} task files found in `{path}/tasks/`."
+Parse and display metrics from `task-review.md` (remediation stats, remaining issues, coverage).
+
 Display severity indicator:
+
 - Critical > 0: "⛔ **CRITICAL ISSUES** — Resolve before proceeding"
 - High > 0: "⚠️ **HIGH priority issues** — Review recommended"
 - Otherwise: "✅ **No blocking issues**"
 
 Prompt: "Review task files and `task-review.md`, then reply: `continue` (create all issues) | `skip 03, 05` (exclude specified) | `abort` (cancel to address findings)"
 
-**Handle response**:
+**Handle response** (same for both modes):
+
 - `continue`: Proceed to Step 8
 - `skip [numbers]`: Exclude specified, proceed to Step 8
 - `abort`: Preserve files, inform user they can re-run `/nxs.analyze` or `/nxs.tasks`, exit
@@ -237,6 +304,7 @@ After all GitHub issues are created, `tasks.md` is generated, and `epic.md` is u
 # Constraints
 
 **Critical Rules**:
+
 - **DO NOT** search for HLD files - use provided context/arguments only
 - **DO NOT** use labels other than those in `docs/system/delivery/task-labels.md`
 - **MANDATORY STOP** at Review Checkpoint - require explicit user confirmation
