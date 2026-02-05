@@ -13,6 +13,8 @@ last_updated: 2026-01-19
 - **Build Tool**: Vite 7.0.0
 - **Styling**: Tailwind CSS 3.4.3
 - **Compiler**: SWC via @vitejs/plugin-react-swc
+- **State Management**: Jotai
+- **UI Components**: shadcn/ui with Base-UI
 
 ## Backend
 

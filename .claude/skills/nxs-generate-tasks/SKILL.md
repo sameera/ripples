@@ -107,9 +107,14 @@ Returns JSON summary to stdout:
   "tasks_generated": 5,
   "output_dir": "docs/features/.../tasks",
   "files": ["TASK-7.01.md", "TASK-7.02.md"],
-  "fallbacks_used": 1
+  "fallbacks_used": 1,
+  "invalid_labels": 0
 }
 ```
+
+**Notes:**
+- Labels are validated against `docs/system/delivery/task-labels.md` if it exists
+- Invalid labels are reported as warnings to stderr and counted in `invalid_labels`
 
 ## Template Variables
 
@@ -125,7 +130,7 @@ The script computes and substitutes these template variables:
 | `{{SUMMARY}}`              | Task summary                         |
 | `{{BLOCKED_BY}}`           | Formatted dependencies or "None"     |
 | `{{BLOCKS}}`               | Formatted dependents or "None"       |
-| `{{WORKSPACE_PATH}}`       | `../ripples-worktrees/{epic_number}` |
+| `{{WORKSPACE_PATH}}`       | `../{repo-name}-worktrees/{epic_number}` |
 | `{{BRANCH}}`               | `{type}/{epic_number}-{kebab-title}` |
 | `{{EFFORT_ESTIMATE}}`      | Mapped from effort size              |
 | `{{FILES}}`                | From architect or fallback           |

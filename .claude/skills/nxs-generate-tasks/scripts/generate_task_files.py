@@ -37,7 +37,13 @@ import json
 import os
 import re
 import sys
+import urllib.request
+import urllib.error
 from pathlib import Path
+
+
+# Remote template URL for fallback download
+TEMPLATE_URL = "https://raw.githubusercontent.com/sameera/nexus/refs/heads/main/common/docs/system/delivery/task-template.md"
 
 
 # Fallback content for when architect response is missing or incomplete
@@ -162,9 +168,65 @@ def compute_branch_name(epic_type: str, epic_number: int, epic_title: str) -> st
     return f"{prefix}/{epic_number}-{kebab_title}"
 
 
-def compute_workspace_path(epic_number: int) -> str:
-    """Generate git worktree path."""
-    return f"../ripples-worktrees/{epic_number}"
+def parse_valid_labels(project_root: Path) -> set[str] | None:
+    """Parse valid labels from task-labels.md file.
+
+    Looks for a markdown table with label names in the first column.
+    Returns None if the file doesn't exist (validation skipped).
+    Returns empty set if file exists but no labels found.
+    """
+    labels_path = project_root / "docs" / "system" / "delivery" / "task-labels.md"
+
+    if not labels_path.exists():
+        return None
+
+    content = labels_path.read_text()
+    labels: set[str] = set()
+
+    # Look for table rows: | label-name | description |
+    # Skip header row and separator row (|---|---|)
+    table_row_pattern = r"^\|\s*`?([a-z][a-z0-9-]*)`?\s*\|"
+
+    for line in content.split("\n"):
+        match = re.match(table_row_pattern, line, re.IGNORECASE)
+        if match:
+            label = match.group(1).lower().strip("`")
+            # Skip header-like entries
+            if label not in ("label", "name", "---", "-"):
+                labels.add(label)
+
+    return labels
+
+
+def validate_labels(
+    task_labels: list[str],
+    valid_labels: set[str] | None,
+    task_id: str,
+) -> list[str]:
+    """Validate task labels against known valid labels.
+
+    Returns list of warning messages for invalid labels.
+    If valid_labels is None, validation is skipped (no warnings).
+    """
+    if valid_labels is None:
+        return []
+
+    warnings: list[str] = []
+    for label in task_labels:
+        if label.lower() not in valid_labels:
+            warnings.append(f"[WARN] {task_id}: Unknown label '{label}' (not in task-labels.md)")
+
+    return warnings
+
+
+def compute_workspace_path(epic_number: int, repo_name: str) -> str:
+    """Generate git worktree path.
+
+    Examples:
+        (7, "nexus") -> "../nexus-worktrees/7"
+        (42, "my-app") -> "../my-app-worktrees/42"
+    """
+    return f"../{repo_name}-worktrees/{epic_number}"
 
 
 def substitute_template(template: str, variables: dict[str, str]) -> str:
@@ -187,14 +249,45 @@ def strip_template_comment(template: str) -> str:
     return re.sub(pattern, "", template)
 
 
+def download_template(template_path: Path) -> str:
+    """Download the task template from GitHub and save locally.
+
+    Returns the template content on success.
+    Raises an exception if download fails.
+    """
+    print(f"Template not found locally. Downloading from GitHub...", file=sys.stderr)
+
+    try:
+        with urllib.request.urlopen(TEMPLATE_URL, timeout=30) as response:
+            content = response.read().decode("utf-8")
+
+        # Ensure parent directory exists
+        template_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Save for future use
+        template_path.write_text(content)
+        print(f"Template saved to: {template_path}", file=sys.stderr)
+
+        return content
+
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"Failed to download template from {TEMPLATE_URL}: {e}")
+    except OSError as e:
+        raise RuntimeError(f"Failed to save template to {template_path}: {e}")
+
+
 def read_template(project_root: Path) -> str:
-    """Read the task template file and strip documentation comments."""
+    """Read the task template file and strip documentation comments.
+
+    If the template doesn't exist locally, downloads it from GitHub.
+    """
     template_path = project_root / "docs" / "system" / "delivery" / "task-template.md"
 
-    if not template_path.exists():
-        raise FileNotFoundError(f"Task template not found at: {template_path}")
+    if template_path.exists():
+        content = template_path.read_text()
+    else:
+        content = download_template(template_path)
 
-    content = template_path.read_text()
     return strip_template_comment(content)
 
 
@@ -203,6 +296,7 @@ def generate_task_content(
     epic_number: int,
     epic_title: str,
     epic_type: str,
+    repo_name: str,
     task: dict,
 ) -> tuple[str, bool]:
     """Generate content for a single task file.
@@ -227,7 +321,7 @@ def generate_task_content(
         "SUMMARY": task.get("summary", ""),
         "BLOCKED_BY": format_dependencies(task.get("blocked_by", []), epic_number),
         "BLOCKS": format_dependencies(task.get("blocks", []), epic_number),
-        "WORKSPACE_PATH": compute_workspace_path(epic_number),
+        "WORKSPACE_PATH": compute_workspace_path(epic_number, repo_name),
         "BRANCH": compute_branch_name(epic_type, epic_number, epic_title),
         "EFFORT_ESTIMATE": EFFORT_MAP.get(task.get("effort", "M"), task.get("effort", "TBD")),
     }
@@ -261,6 +355,9 @@ def generate_task_files(
     output_dir = Path(input_data["output_dir"])
     tasks = input_data["tasks"]
 
+    # Derive repo name from project root directory name
+    repo_name = project_root.name
+
     # Make output_dir absolute if relative
     if not output_dir.is_absolute():
         output_dir = project_root / output_dir
@@ -268,23 +365,38 @@ def generate_task_files(
     # Read template
     template = read_template(project_root)
 
+    # Load valid labels for validation
+    valid_labels = parse_valid_labels(project_root)
+    if valid_labels is None:
+        print("Note: task-labels.md not found, skipping label validation", file=sys.stderr)
+    elif len(valid_labels) == 0:
+        print("Warning: task-labels.md found but no labels parsed", file=sys.stderr)
+
     # Ensure output directory exists
     if not dry_run:
         output_dir.mkdir(parents=True, exist_ok=True)
 
     files_created: list[str] = []
     fallbacks_used = 0
+    label_warnings: list[str] = []
 
     for task in tasks:
         seq = task["sequence"]
         filename = f"TASK-{epic_number}.{seq:02d}.md"
         filepath = output_dir / filename
+        task_id = f"TASK-{epic_number}.{seq:02d}"
+
+        # Validate labels
+        task_labels = task.get("labels", [])
+        warnings = validate_labels(task_labels, valid_labels, task_id)
+        label_warnings.extend(warnings)
 
         content, used_fallback = generate_task_content(
             template=template,
             epic_number=epic_number,
             epic_title=epic_title,
             epic_type=epic_type,
+            repo_name=repo_name,
             task=task,
         )
 
@@ -303,12 +415,17 @@ def generate_task_files(
             filepath.write_text(content)
             files_created.append(filename)
 
+    # Print label warnings to stderr
+    for warning in label_warnings:
+        print(warning, file=sys.stderr)
+
     return {
         "status": "success",
         "tasks_generated": len(files_created) if not dry_run else len(tasks),
         "output_dir": str(output_dir),
         "files": files_created if not dry_run else [f"TASK-{epic_number}.{t['sequence']:02d}.md" for t in tasks],
         "fallbacks_used": fallbacks_used,
+        "invalid_labels": len(label_warnings),
     }
 
 
