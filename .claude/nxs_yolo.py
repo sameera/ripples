@@ -199,7 +199,6 @@ class WorkspaceManager:
         self.repo_root = repo_root
         self.setup_script = (
             repo_root
-            / "claude"
             / ".claude"
             / "skills"
             / "nxs-workspace-setup"
@@ -271,6 +270,12 @@ class WorkspaceManager:
 
         success("Worktree reverted to clean state")
 
+    def _detect_package_manager(self, worktree_path: Path) -> str:
+        """Detect the package manager used by the project."""
+        if (worktree_path / "pnpm-lock.yaml").exists():
+            return "pnpm"
+        return "npm"
+
     def sync_environment(self, worktree_path: Path) -> None:
         """Sync environment in the worktree."""
         info(f"Syncing environment in {worktree_path}...")
@@ -283,11 +288,15 @@ class WorkspaceManager:
                 with gitignore.open("a") as f:
                     f.write("\n.tmp/\n")
 
-        # Check for package.json and run npm install
+        # Check for package.json and run the appropriate package manager
         package_json = worktree_path / "package.json"
         if package_json.exists():
-            run_command(["npm", "install", "--silent"], cwd=worktree_path)
-            success("npm dependencies installed")
+            pm = self._detect_package_manager(worktree_path)
+            if pm == "pnpm":
+                run_command(["pnpm", "install", "--silent"], cwd=worktree_path)
+            else:
+                run_command(["npm", "install", "--silent"], cwd=worktree_path)
+            success(f"{pm} dependencies installed")
 
         # Check for .env.example and create .env if needed
         env_example = worktree_path / ".env.example"
@@ -318,8 +327,8 @@ class WorkspaceManager:
 class GitHubManager:
     """Manages GitHub issue interactions."""
 
-    def fetch_issue(self, issue_number: int) -> dict:
-        """Fetch issue details from GitHub."""
+    def fetch_issue(self, issue_number: int) -> Optional[dict]:
+        """Fetch issue details from GitHub. Returns None if issue is closed."""
         result = run_command(
             ["gh", "issue", "view", str(issue_number), "--json", "number,title,body,url,state"],
             check=False,
@@ -330,12 +339,10 @@ class GitHubManager:
 
         issue_json = json.loads(result.stdout)
 
-        # Check if issue is closed
+        # Auto-skip closed issues (no interactive prompt in YOLO mode)
         if issue_json.get("state") == "CLOSED":
-            warn(f"Issue #{issue_number} is already CLOSED")
-            response = input("Continue anyway? [y/N] ")
-            if response.lower() != "y":
-                die("Aborted by user")
+            warn(f"Issue #{issue_number} is already CLOSED, skipping")
+            return None
 
         return issue_json
 
@@ -361,7 +368,10 @@ class GitHubManager:
             return None
 
         info("Committing changes...")
-        commit_msg = f"feat: implement #{issue_number} - {issue_title}"
+        safe_title = re.sub(r"[^\w\s\-.,!?()#/]", "", issue_title).strip()
+        if len(safe_title) > 72:
+            safe_title = safe_title[:69] + "..."
+        commit_msg = f"feat: implement #{issue_number} - {safe_title}"
         run_command(["git", "commit", "-m", commit_msg], cwd=worktree_path)
 
         # Get commit hash
@@ -423,6 +433,8 @@ class YoloProcessor:
         # Phase 1: Fetch issue
         info(f"Fetching issue #{issue_number}...")
         issue_json = self.github_manager.fetch_issue(issue_number)
+        if issue_json is None:
+            return
 
         issue_title = issue_json["title"]
         issue_body = issue_json["body"] or ""
@@ -490,7 +502,13 @@ class YoloProcessor:
 
         # Phase 6: Commit and close
         header("Shipping Implementation")
-        self.github_manager.commit_and_close(worktree_path, issue_number, issue_title, branch_name)
+        commit_hash = self.github_manager.commit_and_close(
+            worktree_path, issue_number, issue_title, branch_name
+        )
+
+        if commit_hash is None:
+            warn(f"Issue #{issue_number} had no changes to commit. Issue remains open.")
+            return
 
         # Update state: mark success
         self.state_manager.update_success(issue_number)
