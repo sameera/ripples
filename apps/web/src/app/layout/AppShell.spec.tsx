@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { Provider, createStore } from "jotai";
@@ -98,6 +98,11 @@ describe("AppShell", () => {
             expect(shell.style.transition).toContain("150ms");
             expect(shell.style.transition).toContain("ease-out");
         });
+    });
+
+    it("should render AppSidebar inside the aside", () => {
+        renderAppShell();
+        expect(screen.getByTestId("sidebar")).toBeTruthy();
     });
 
     describe("sidebar aside", () => {

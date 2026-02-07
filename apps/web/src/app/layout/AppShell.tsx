@@ -1,5 +1,6 @@
 import { useAtomValue } from "jotai";
 import { sidebarCollapsedAtom } from "../../state/sidebar";
+import { AppSidebar } from "../sidebar/AppSidebar";
 import { MainCanvas } from "./MainCanvas";
 
 const SIDEBAR_WIDTH_EXPANDED = "240px";
@@ -19,7 +20,7 @@ export function AppShell() {
             }}
         >
             <aside className="sticky top-0 h-screen overflow-y-auto bg-gray-50">
-                {/* Placeholder — replaced by AppSidebar in Task 4 */}
+                <AppSidebar />
             </aside>
             <MainCanvas />
         </div>

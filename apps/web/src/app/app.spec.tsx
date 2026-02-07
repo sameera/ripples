@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, within } from "@testing-library/react";
 import { expect, it, describe } from "vitest";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { Provider } from "jotai";
@@ -38,18 +38,20 @@ describe("App", () => {
 
     it("should redirect / to /stream", () => {
         const router = createTestRouter("/");
-        const { getByText } = render(<RouterProvider router={router} />);
-        expect(getByText("Daily Stream")).toBeTruthy();
+        const { container } = render(<RouterProvider router={router} />);
+        const main = container.querySelector("main") as HTMLElement;
+        expect(within(main).getByText("Daily Stream")).toBeTruthy();
     });
 
     it("should render PlaceholderView for each route", () => {
         for (const route of routes) {
             const router = createTestRouter(route.path);
-            const { getByText, unmount } = render(
+            const { container, unmount } = render(
                 <RouterProvider router={router} />
             );
-            expect(getByText(route.label)).toBeTruthy();
-            expect(getByText("Coming soon")).toBeTruthy();
+            const main = container.querySelector("main") as HTMLElement;
+            expect(within(main).getByText(route.label)).toBeTruthy();
+            expect(within(main).getByText("Coming soon")).toBeTruthy();
             unmount();
         }
     });
