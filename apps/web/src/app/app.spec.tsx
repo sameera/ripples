@@ -1,18 +1,29 @@
 import { render } from "@testing-library/react";
 import { expect, it, describe } from "vitest";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { Provider } from "jotai";
 import { routes } from "./routes/routes.config";
 import { PlaceholderView } from "./routes/PlaceholderView";
+import { AppShell } from "./layout/AppShell";
 import { Navigate } from "react-router-dom";
 
 function createTestRouter(initialPath: string) {
     return createMemoryRouter(
         [
-            { path: "/", element: <Navigate to="/stream" replace /> },
-            ...routes.map((route) => ({
-                path: route.path,
-                element: <PlaceholderView />,
-            })),
+            {
+                element: (
+                    <Provider>
+                        <AppShell />
+                    </Provider>
+                ),
+                children: [
+                    { path: "/", element: <Navigate to="/stream" replace /> },
+                    ...routes.map((route) => ({
+                        path: route.path,
+                        element: <PlaceholderView />,
+                    })),
+                ],
+            },
         ],
         { initialEntries: [initialPath] }
     );
@@ -41,5 +52,12 @@ describe("App", () => {
             expect(getByText("Coming soon")).toBeTruthy();
             unmount();
         }
+    });
+
+    it("should wrap routes with AppShell layout", () => {
+        const router = createTestRouter("/stream");
+        const { container } = render(<RouterProvider router={router} />);
+        const grid = container.querySelector("[data-collapsed]");
+        expect(grid).toBeTruthy();
     });
 });
