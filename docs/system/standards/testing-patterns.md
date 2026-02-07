@@ -330,6 +330,61 @@ test.describe("User Authentication", () => {
 
 ## Testing Best Practices
 
+### Avoiding Flaky Tests (AI Agent Guidance)
+
+**95% test coverage without flaky tests is better than 100% coverage with flaky tests that will break.**
+
+When generating UI tests, **never** create tests that depend on:
+
+1. **CSS classes or styles** - Class names change with refactoring, CSS-in-JS libraries generate dynamic names
+   ```typescript
+   // BAD - Flaky
+   expect(element).toHaveClass("btn-primary-active");
+   await page.click(".submit-button");
+
+   // GOOD - Stable
+   expect(element).toBeEnabled();
+   await page.click('button[type="submit"]');
+   ```
+
+2. **Specific DOM hierarchy** - Component structure changes frequently
+   ```typescript
+   // BAD - Flaky
+   await page.locator("div > div > span.label");
+   container.querySelector("form > div:nth-child(2) > input");
+
+   // GOOD - Stable
+   await page.getByRole("textbox", { name: "Email" });
+   screen.getByLabelText("Email");
+   ```
+
+3. **Console log entries or error messages** - Log formats change, messages get updated
+   ```typescript
+   // BAD - Flaky
+   expect(console.log).toHaveBeenCalledWith("User logged in successfully");
+
+   // GOOD - Stable
+   expect(onLoginSuccess).toHaveBeenCalled();
+   await expect(page).toHaveURL("/dashboard");
+   ```
+
+4. **Internal component state or implementation details**
+   ```typescript
+   // BAD - Flaky
+   expect(component.state.isLoading).toBe(false);
+
+   // GOOD - Stable
+   expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+   ```
+
+**Prefer these stable selectors (in order of preference)**:
+1. **Accessible roles**: `getByRole("button")`, `getByRole("textbox")`
+2. **Label text**: `getByLabelText("Email")`, `getByText("Submit")`
+3. **Placeholder text**: `getByPlaceholderText("Search...")`
+4. **Test IDs** (last resort): `getByTestId("submit-button")`
+
+**Skip tests rather than write flaky ones** - If a behavior cannot be tested reliably, document why and skip it. A skipped test with a clear explanation is better than a flaky test that erodes CI trust.
+
 ### General Principles
 
 1. **Write tests for behavior, not implementation**
