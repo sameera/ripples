@@ -1,15 +1,45 @@
 import { render } from "@testing-library/react";
 import { expect, it, describe } from "vitest";
-import App from "./app";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { routes } from "./routes/routes.config";
+import { PlaceholderView } from "./routes/PlaceholderView";
+import { Navigate } from "react-router-dom";
+
+function createTestRouter(initialPath: string) {
+    return createMemoryRouter(
+        [
+            { path: "/", element: <Navigate to="/stream" replace /> },
+            ...routes.map((route) => ({
+                path: route.path,
+                element: <PlaceholderView />,
+            })),
+        ],
+        { initialEntries: [initialPath] }
+    );
+}
 
 describe("App", () => {
     it("should render successfully", () => {
-        const { baseElement } = render(<App />);
+        const router = createTestRouter("/stream");
+        const { baseElement } = render(<RouterProvider router={router} />);
         expect(baseElement).toBeTruthy();
     });
 
-    it("should have a greeting as the title", () => {
-        const { getAllByText } = render(<App />);
-        expect(getAllByText(new RegExp("Welcome ripple", "gi")).length > 0).toBeTruthy();
+    it("should redirect / to /stream", () => {
+        const router = createTestRouter("/");
+        const { getByText } = render(<RouterProvider router={router} />);
+        expect(getByText("Daily Stream")).toBeTruthy();
+    });
+
+    it("should render PlaceholderView for each route", () => {
+        for (const route of routes) {
+            const router = createTestRouter(route.path);
+            const { getByText, unmount } = render(
+                <RouterProvider router={router} />
+            );
+            expect(getByText(route.label)).toBeTruthy();
+            expect(getByText("Coming soon")).toBeTruthy();
+            unmount();
+        }
     });
 });
