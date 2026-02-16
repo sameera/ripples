@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test('has title', async ({ page }) => {
-  await page.goto('/');
+test("has title", async ({ page }) => {
+    await page.goto("/");
 
-  // Expect h1 to contain a substring.
-  expect(await page.locator('h1').innerText()).toContain('Welcome');
+    // App redirects to /stream which shows "Daily Stream" heading
+    await expect(page.locator("h2")).toContainText("Daily Stream");
 });
