@@ -209,6 +209,7 @@ See [tasks.md](./tasks.md) for the detailed task breakdown and dependency graph.
 
 ### Related Documents
 
+- [Post-Implementation Report](https://github.com/sameera/ripples/tree/main/docs/features/layout/01-core-layout-shell-sidebar/PIR.md) - Implementation summary and key decisions
 - [Layout Feature Brief](https://github.com/sameera/ripples/tree/main/docs/features/layout/README.md) - Parent Feature Brief
 - [Epic 02: Top Bar & Contextual Pane](https://github.com/sameera/ripples/tree/main/docs/features/layout/02-top-bar-contextual-pane/epic.md) - Depends on this epic
 - [Epic 03: Mobile Responsive Layout](https://github.com/sameera/ripples/tree/main/docs/features/layout/03-mobile-responsive-layout/epic.md) - Depends on this epic
