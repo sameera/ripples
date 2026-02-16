@@ -187,7 +187,7 @@ Given that capability description, do this:
         - For example: `plan-2026-01-08.md`, `design-notes.md`, etc.
 
     c. **Never link to files outside the repository**:
-    - ❌ NEVER use paths like `~/.claude/plans/...`
+    - ❌ NEVER use paths like `~/.gemini/plans/...`
     - ❌ NEVER use absolute paths outside the repository
     - ✅ ALWAYS copy external files into the repository
     - ✅ ONLY link to repository-relative paths in documentation
@@ -220,13 +220,13 @@ Given that capability description, do this:
     **IMPORTANT - Absolute Path Linking**: All `.md` file links in the document MUST use absolute GitHub URLs. Use the `nxs-abs-doc-path` skill to convert relative paths:
 
     ```bash
-    python ./.claude/skills/nxs-abs-doc-path/get_abs_doc_path.py "<relative-path-from-repo-root>"
+    python ./.gemini/skills/nxs-abs-doc-path/get_abs_doc_path.py "<relative-path-from-repo-root>"
     ```
 
     Example:
 
     ```bash
-    python ./.claude/skills/nxs-abs-doc-path/get_abs_doc_path.py "docs/features/tagging/README.md"
+    python ./.gemini/skills/nxs-abs-doc-path/get_abs_doc_path.py "docs/features/tagging/README.md"
     # Output: https://github.com/sameera/awzm/tree/main/docs/features/tagging/README.md
     ```
 
@@ -461,7 +461,7 @@ estimated_duration: "[X days/weeks - likely case from architect]"
     For each epic document generated, invoke the `nxs-gh-create-epic` skill:
 
     ```bash
-    python ./.claude/skills/nxs-gh-create-epic/scripts/nxs_gh_create_epic.py "<path-to-epic.md>"
+    python ./.gemini/skills/nxs-gh-create-epic/scripts/nxs_gh_create_epic.py "<path-to-epic.md>"
     ```
 
     a. **For multiple epics** (Option 2 - right-sizing):
@@ -527,10 +527,10 @@ Use the `nxs-abs-doc-path` skill to convert relative paths:
 
 ```bash
 # Convert a single path
-python ./.claude/skills/nxs-abs-doc-path/get_abs_doc_path.py "docs/features/tagging/README.md"
+python ./.gemini/skills/nxs-abs-doc-path/get_abs_doc_path.py "docs/features/tagging/README.md"
 
 # Convert multiple paths at once
-python ./.claude/skills/nxs-abs-doc-path/get_abs_doc_path.py "docs/features/tagging/README.md" "docs/system/delivery/task-labels.md"
+python ./.gemini/skills/nxs-abs-doc-path/get_abs_doc_path.py "docs/features/tagging/README.md" "docs/system/delivery/task-labels.md"
 ```
 
 The script reads the `docRoot` from `docs/system/delivery/config.json` and constructs the full URL.

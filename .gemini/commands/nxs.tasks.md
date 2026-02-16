@@ -1,7 +1,7 @@
 ---
 description: Break down a High-Level Design into implementable GitHub issues
 model: sonnet
-tools: Read, Write, Glob, Grep, Task, Skill, Bash
+tools: read_file, write_file, glob, search_file_content, delegate_to_agent, activate_skill, run_shell_command
 ---
 
 # Role
@@ -71,7 +71,7 @@ Before analyzing the HLD, ensure a GitHub issue exists for the parent epic:
     b. **If `link` is missing**:
     - Invoke the `nxs-gh-create-epic` skill:
       ```bash
-      python ./.claude/skills/nxs-gh-create-epic/scripts/nxs_gh_create_epic.py "<path-to-epic.md>"
+      python ./.gemini/skills/nxs-gh-create-epic/scripts/nxs_gh_create_epic.py "<path-to-epic.md>"
       ```
     - Verify the `epic.md` frontmatter now contains a `link` attribute
     - Extract and store the issue number from the `link` attribute for use in task generation
@@ -235,7 +235,7 @@ Write this JSON to a temporary file (e.g., `/tmp/tasks-input-{epic_number}.json`
 Execute the task file generation script:
 
 ```bash
-python .claude/skills/nxs-generate-tasks/scripts/generate_task_files.py /tmp/tasks-input-{epic_number}.json
+python .gemini/skills/nxs-generate-tasks/scripts/generate_task_files.py /tmp/tasks-input-{epic_number}.json
 ```
 
 ### Expected Response
@@ -429,4 +429,4 @@ After all GitHub issues are created, `tasks.md` is generated, and `epic.md` is u
 - Prefer smaller tasks over larger when uncertain
 - Ensure first task creates buildable/runnable skeleton
 
-**Project Configuration**: On first run, if `docs/system/delivery/config.json` does not contain a `project` attribute, prompt user for GitHub project name (e.g., `org/repo`), add it to `config.json`, then proceed. On subsequent runs, use existing value. The `generate_task_files.py` script reads `project` from this config file to populate the `{{PROJECT}}` template variable.
+**Project Configuration**: On first run, if template contains `{{PROJECT}}`, prompt user for GitHub project name (e.g., `org/repo`), update template file directly, then proceed. On subsequent runs, use existing value.

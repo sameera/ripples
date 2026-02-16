@@ -144,7 +144,7 @@ type: post-implementation-report
 
 1. **Generate absolute URL for PIR.md** using the `nxs-abs-doc-path` skill:
     ```bash
-    python ./.claude/skills/nxs-abs-doc-path/get_abs_doc_path.py "{epic-directory}/PIR.md"
+    python ./.gemini/skills/nxs-abs-doc-path/get_abs_doc_path.py "{epic-directory}/PIR.md"
     ```
 
 2. **Locate the `### Related Documents` section** in epic.md:
@@ -323,7 +323,7 @@ You may want to manually enhance PIR.md with implementation specifics.
 8. **Generate PIR.md** using the template and extracted content
 9. **Generate absolute URL** for PIR.md using `nxs-abs-doc-path` skill:
     ```bash
-    python ./.claude/skills/nxs-abs-doc-path/get_abs_doc_path.py "{repo-relative-path-to-PIR.md}"
+    python ./.gemini/skills/nxs-abs-doc-path/get_abs_doc_path.py "{repo-relative-path-to-PIR.md}"
     ```
 10. **Update epic.md** Related Documents section with PIR link
 11. **CONFIRMATION CHECKPOINT - STOP AND WAIT**:
