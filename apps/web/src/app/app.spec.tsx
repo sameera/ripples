@@ -59,7 +59,7 @@ describe("App", () => {
     it("should wrap routes with AppShell layout", () => {
         const router = createTestRouter("/stream");
         const { container } = render(<RouterProvider router={router} />);
-        const grid = container.querySelector("[data-collapsed]");
+        const grid = container.querySelector("[data-sidebar-collapsed]");
         expect(grid).toBeTruthy();
     });
 });

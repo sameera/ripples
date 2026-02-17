@@ -1,5 +1,6 @@
 import { SearchPlaceholder } from "../top-bar/SearchPlaceholder";
 import { ScopeIndicator } from "../top-bar/ScopeIndicator";
+import { UserMenu } from "../top-bar/UserMenu";
 import { PaneToggleButton } from "../contextual-pane/PaneToggleButton";
 
 export function TopBar() {
@@ -14,6 +15,7 @@ export function TopBar() {
             </div>
             <div className="flex items-center gap-2">
                 <PaneToggleButton />
+                <UserMenu />
             </div>
         </header>
     );
