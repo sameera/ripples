@@ -1,6 +1,7 @@
 import { useAtomValue } from "jotai";
 import { sidebarCollapsedAtom } from "../../state/sidebar";
 import { contextualPaneOpenAtom } from "../../state/contextual-pane";
+import { usePrefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 import { AppSidebar } from "../sidebar/AppSidebar";
 import { MainCanvas } from "./MainCanvas";
 import { TopBar } from "./TopBar";
@@ -14,6 +15,7 @@ const PANE_WIDTH_OPEN = "280px";
 export function AppShell() {
     const sidebarCollapsed = useAtomValue(sidebarCollapsedAtom);
     const paneOpen = useAtomValue(contextualPaneOpenAtom);
+    const prefersReducedMotion = usePrefersReducedMotion();
 
     const sidebarWidth = sidebarCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
     const paneWidth = paneOpen ? PANE_WIDTH_OPEN : "0px";
@@ -21,7 +23,7 @@ export function AppShell() {
     const gridStyle = {
         gridTemplateRows: `${TOPBAR_HEIGHT} 1fr`,
         gridTemplateColumns: `${sidebarWidth} 1fr ${paneWidth}`,
-        transition: "grid-template-columns 200ms ease-out",
+        transition: prefersReducedMotion ? "none" : "grid-template-columns 200ms ease-out",
     };
 
     return (

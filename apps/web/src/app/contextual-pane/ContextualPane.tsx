@@ -1,6 +1,7 @@
+import { type ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { contextualPaneOpenAtom } from "../../state/contextual-pane";
-import { type ReactNode } from "react";
+import { usePrefersReducedMotion } from "../../hooks/usePrefersReducedMotion";
 
 interface ContextualPaneProps {
     children?: ReactNode;
@@ -8,6 +9,7 @@ interface ContextualPaneProps {
 
 export function ContextualPane({ children }: ContextualPaneProps) {
     const isOpen = useAtomValue(contextualPaneOpenAtom);
+    const prefersReducedMotion = usePrefersReducedMotion();
 
     return (
         <aside
@@ -17,7 +19,7 @@ export function ContextualPane({ children }: ContextualPaneProps) {
                 width: isOpen ? "280px" : "0px",
                 maxWidth: "30vw",
                 overflow: isOpen ? "auto" : "hidden",
-                transition: "width 200ms ease-out",
+                transition: prefersReducedMotion ? "none" : "width 200ms ease-out",
             }}
         >
             {isOpen && (
