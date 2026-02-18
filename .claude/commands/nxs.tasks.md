@@ -98,11 +98,13 @@ After loading the HLD, validate the current epic's scope against sibling epics i
     - Scan for other `*/epic.md` files in sibling directories (e.g., `01-epic-a/epic.md`, `02-epic-b/epic.md`)
     - If no sibling epics exist, skip this step entirely
 
-2. **Load sibling epic context**:
-    - For each sibling epic, parse:
+2. **Load sibling epic context** (lightweight scan — minimize token usage):
+    - For each sibling epic, read ONLY:
         - Frontmatter: `epic` (title), `link` (issue number, if exists), `complexity`, `status`
-        - User Stories section: story titles and high-level scope
-        - Out of Scope section
+        - Out of Scope section (if present)
+    - Do NOT read the full epic body, user stories, or detailed descriptions
+    - Target: < 500 tokens per sibling epic
+    - **Fast exit**: If the current HLD's "Out of Scope" section explicitly references sibling epics by name (e.g., "Mobile behavior deferred to Epic 03"), scope boundaries are already well-defined — perform the quick scan but expect no findings
 
 3. **Cross-reference HLD scope with sibling epics**:
     - Compare the HLD's scope (Requirements Analysis, Architecture Overview) against sibling epic scopes
@@ -161,14 +163,15 @@ Delegate HLD decomposition to `nxs-decomposer`:
     - Request: "Decompose into implementation tasks"
 
 2. The decomposer will return structured JSON with:
-    - Sequenced tasks (≤2 days each, effort-sized)
+    - Sequenced tasks (≤2 days each, effort-sized) with inline `architect_response` (LLD content) for each task
     - Phase/category assignments (Infrastructure, Data Layer, Core Logic, API, Integration, Polish)
     - Dependency relationships (blocked_by/blocks)
     - Mermaid dependency graph
     - Parallelization opportunities
 
 3. Validate response:
-    - All tasks have required fields (sequence, title, category, summary, effort, labels)
+    - All tasks have required fields (sequence, title, category, summary, effort, labels, architect_response)
+    - Each `architect_response` contains `### Files` and `### Acceptance Criteria` sections
     - Dependencies form valid DAG (no cycles)
     - No task exceeds M size (≤2 days)
 
@@ -176,35 +179,21 @@ Delegate HLD decomposition to `nxs-decomposer`:
 
 ## 5. Generate Task Files
 
-Generate task files by invoking the architect for LLD content, then running the task generation script.
+Generate task files from the decomposer output using the generation script. The decomposer already provides `architect_response` (LLD content) inline for each task — no separate architect agent invocation is needed.
 
-### 5.1 Generate LLD Content
+**DO NOT** invoke `nxs-architect` for LLD content. The decomposer produces `architect_response` inline.
 
-For each task from the decomposer, invoke `nxs-architect` in LLD-elaboration mode:
+### 5.1 Validate Decomposer Output
 
-```
-Invoke: nxs-architect
-Mode: LLD-elaboration (HLD is authoritative)
-Topic: Low-Level Design for TASK-{epic_number}.{sequence}: {title}
-HLD Content: [relevant sections from HLD]
-Task Context:
-  - Category: {category}
-  - Summary: {summary}
-  - Blocked by: {blocked_by}
-  - Blocks: {blocks}
-Request:
-  - FILES: List files to create/modify with purposes
-  - INTERFACES: Key TypeScript interfaces/types
-  - KEY_DECISIONS: Table of decisions with rationale (extract from HLD)
-  - IMPLEMENTATION_NOTES: Patterns, edge cases, testing guidance
-  - ACCEPTANCE_CRITERIA: Checklist items for this specific task
-```
+Before proceeding, verify the decomposer output:
 
-Store each architect response in the task object as `architect_response`.
+- Every task object contains a non-empty `architect_response` field
+- Each `architect_response` contains at least `### Files` and `### Acceptance Criteria` sections
+- If any task is missing `architect_response`, report which tasks are missing and **STOP** — do not proceed with placeholder content
 
 ### 5.2 Prepare Input JSON
 
-Assemble all data into a JSON structure:
+Assemble the decomposer output into the script's input format:
 
 ```json
 {
@@ -213,17 +202,7 @@ Assemble all data into a JSON structure:
   "epic_type": "{enhancement|bug from epic.md}",
   "output_dir": "{HLD directory}/tasks",
   "tasks": [
-    {
-      "sequence": 1,
-      "title": "Task title",
-      "category": "Category",
-      "summary": "One paragraph summary",
-      "effort": "S",
-      "labels": ["frontend"],
-      "blocked_by": [],
-      "blocks": [2, 3],
-      "architect_response": "### Files\n\n- `path/to/file.ts`..."
-    }
+    {pass through each task object from the decomposer output directly — it already contains sequence, title, category, summary, effort, labels, blocked_by, blocks, and architect_response}
   ]
 }
 ```
@@ -252,9 +231,8 @@ python .claude/skills/nxs-generate-tasks/scripts/generate_task_files.py /tmp/tas
 
 ### Error Handling
 
-- If architect fails for a task, set `architect_response` to `null` (script uses fallbacks)
+- If `fallbacks_used > 0`, warn user: "WARNING: {N} tasks have placeholder LLD content. The decomposer should have provided `architect_response` for all tasks. Consider re-running decomposition."
 - If script returns error, report to user and stop
-- If `fallbacks_used > 0`, warn user that some tasks have placeholder LLD content
 
 ## 6. Run Consistency Analysis & Auto-Remediation
 
@@ -426,7 +404,8 @@ After all GitHub issues are created, `tasks.md` is generated, and `epic.md` is u
 - **DO** check sibling epics for scope overlap before decomposing tasks
 - **DO** use `gh issue close --reason "not planned"` (not `--reason completed`) when closing superfluous epics
 - **MANDATORY STOP** at Review Checkpoint - require explicit user confirmation
-- Prefer smaller tasks over larger when uncertain
 - Ensure first task creates buildable/runnable skeleton
+- **DO NOT** invoke `nxs-architect` for LLD content — the decomposer produces `architect_response` inline
+- **DO NOT** proceed with task file generation if `architect_response` is missing from any task
 
 **Project Configuration**: On first run, if `docs/system/delivery/config.json` does not contain a `project` attribute, prompt user for GitHub project name (e.g., `org/repo`), add it to `config.json`, then proceed. On subsequent runs, use existing value. The `generate_task_files.py` script reads `project` from this config file to populate the `{{PROJECT}}` template variable.

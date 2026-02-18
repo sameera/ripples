@@ -126,8 +126,18 @@ When invoked via `/nxs.tasks` for Low-Level Design generation from an existing H
 - Suggest "better" approaches than what the HLD specifies
 - Re-analyze trade-offs that were already decided in the HLD
 - Perform deep code analysis beyond what's needed for the specific task
+- Perform web searches — all technical information is in the HLD
+- Read product context (`docs/product/context.md`) — the HLD already incorporates product context
+- Read system docs (`docs/system/`) — the HLD already incorporates system standards
+- Invoke other agents (nxs-decomposer, etc.)
 
 **Output focus**: Files, interfaces, implementation notes, acceptance criteria — not architectural debate.
+
+**Output constraints**:
+
+- Maximum 200 lines total per response
+- Maximum 50 lines per task LLD section
+- Do NOT produce preamble, analysis, or architectural discussion — respond with ONLY the template sections (Files, Interfaces/Types, Key Decisions, Implementation Notes, Acceptance Criteria)
 
 ### Direct Mode (Default)
 

@@ -111,7 +111,8 @@ Transform HLD documents into discrete, implementable tasks.
             "blocked_by": [],
             "blocks": [2, 3],
             "labels": ["infrastructure"],
-            "effort": "S"
+            "effort": "S",
+            "architect_response": "### Files\n\n- `apps/web/src/store/sidebar.ts` - Create Jotai atoms for sidebar state\n- `apps/web/src/store/index.ts` - Export new atoms\n\n### Interfaces/Types\n\n```typescript\nexport const sidebarOpenAtom = atomWithStorage<boolean>(\"sidebar-open\", true);\nexport const sidebarCollapsedAtom = atomWithStorage<boolean>(\"sidebar-collapsed\", false);\n```\n\n### Key Decisions\n\n| Decision | Rationale | Alternatives |\n|----------|-----------|-------------|\n| atomWithStorage over plain atom | Persist sidebar state across sessions per HLD spec | Plain atom (no persistence) |\n\n### Implementation Notes\n\n- Follow existing atom patterns in `apps/web/src/store/`\n- Use localStorage key prefix consistent with app conventions\n- Include unit tests for atom default values and persistence\n\n### Acceptance Criteria\n\n- [ ] Sidebar atoms created with localStorage persistence\n- [ ] Atoms exported from store index\n- [ ] Unit tests pass for default values and state transitions"
         }
     ],
     "dependency_graph": "mermaid flowchart LR syntax",
@@ -128,13 +129,69 @@ Transform HLD documents into discrete, implementable tasks.
 
 **Note**: The `scope_validation` field reports any issues found during decomposition. If `out_of_scope_violations` contains entries, the invoking command will halt and ask the user for guidance.
 
+**IMPORTANT**: The `architect_response` field is REQUIRED for every task. It must contain all five `###` sections (Files, Interfaces/Types, Key Decisions, Implementation Notes, Acceptance Criteria). This content is embedded directly into the generated task files — if it is missing or empty, the task files will have placeholder content.
+
 **Decomposition Principles**:
 
-- Prefer smaller tasks over larger when uncertain
 - First task must create buildable/runnable skeleton
 - Each task should be independently reviewable
 - Merge barrel/export-only tasks into their source tasks
 - Merge verification-only tasks (<1hr) into implementation tasks
+- When uncertain about task granularity, prefer fewer larger tasks over many small ones
+
+### Task Count Proportionality
+
+Scale task count to epic complexity. Over-decomposition wastes tokens, inflates effort estimates, and creates unnecessary overhead.
+
+| Epic Complexity | Duration    | Target Task Count | Min Task Effort |
+| --------------- | ----------- | ----------------- | --------------- |
+| **S**           | 1-3 days    | 3-5 tasks         | 2 hours (XS)   |
+| **M**           | 1-2 weeks   | 5-10 tasks        | 4 hours (S)    |
+| **L**           | 2-4 weeks   | 8-15 tasks        | 4 hours (S)    |
+| **XL**          | 1-3 months  | 12-25 tasks       | 4 hours (S)    |
+
+**Minimum task effort**: 2 hours. If a task would be under 2 hours, merge it into an adjacent task.
+
+**Merge heuristics** (apply before finalizing):
+
+- **Infrastructure bundle**: Package install + config + initial scaffolding = 1 task
+- **Trivial sibling components**: Multiple simple presentation components in the same directory = 1 task (e.g., SearchPlaceholder + ScopeIndicator)
+- **State + sole consumer**: If a state atom is only consumed by one component, include atom creation in that component's task
+- **Test + subject**: NEVER create standalone test-only tasks — tests are part of the implementation task they verify
+
+**Self-check before returning**: Sum the low end of all task effort estimates. If the total exceeds 2x the epic's estimated duration, you have over-decomposed. Merge tasks until the total is proportional.
+
+### LLD Content Generation (Per-Task)
+
+For each task, produce an `architect_response` field containing concise markdown with the following five sections. Extract this content directly from the HLD — you have already read it for decomposition.
+
+**DO NOT** invent content not present in the HLD. **DO NOT** perform web searches. All information needed is in the HLD document.
+
+#### `### Files`
+List files to create or modify with their purposes. Use exact paths from the HLD's component structure.
+```
+- `path/to/file.ts` - Brief description of what to create/modify
+```
+
+#### `### Interfaces/Types`
+Key TypeScript interfaces, types, or definitions relevant to THIS task only. Extract from HLD data models and component specs. Wrap in a typescript code block.
+
+#### `### Key Decisions`
+A markdown table with columns: Decision, Rationale, Alternatives. Include only decisions relevant to THIS task, extracted from the HLD.
+
+#### `### Implementation Notes`
+Concise implementation guidance: patterns to follow, edge cases, testing approach. 3-8 bullet points maximum.
+
+#### `### Acceptance Criteria`
+Specific, testable checklist items for THIS task. Derive from the HLD's testing strategy, the epic's user stories, and NFRs relevant to this task.
+
+**LLD Conciseness Rules**:
+
+| Epic Complexity | Lines per Section | Total per Task |
+| --------------- | ----------------- | -------------- |
+| **S**           | 3-5 lines         | ~30-50 lines   |
+| **M**           | 5-15 lines        | ~50-100 lines  |
+| **L/XL**        | 10-20 lines       | ~80-150 lines  |
 
 ### 2. Effort Estimation
 
@@ -158,6 +215,8 @@ Size work items using calibrated rubrics.
 | **M**  | 1-2 days  | Multiple files, some complexity, testing needed         |
 
 Tasks sized **L** or larger should be decomposed further.
+
+**Effort Calibration Rule**: All task effort estimates for an epic MUST sum to approximately the epic's estimated duration (+-30% tolerance). If the epic is estimated at 2 days (~16 hours) and you have 5 tasks, average effort per task should be ~3 hours. If your estimates total 2-3x the epic duration, your per-task estimates are inflated — recalibrate.
 
 **Estimation Inputs**:
 

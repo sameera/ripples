@@ -1,12 +1,11 @@
 ---
 name: nxs-generate-tasks
-description: Generate task files from decomposer output and architect responses. Use when you need to create TASK-*.md files from structured JSON containing task metadata and LLD content.
-model: haiku
+description: Generate task files from decomposer output containing inline LLD content. Use when you need to create TASK-*.md files from structured JSON with task metadata and architect_response fields.
 ---
 
 # NXS Generate Tasks
 
-Generate TASK-\*.md files from structured JSON input containing task metadata and architect responses.
+Generate TASK-\*.md files from structured JSON input containing task metadata and inline LLD content (produced by the nxs-decomposer agent).
 
 ## Usage
 
@@ -60,7 +59,7 @@ python ./scripts/generate_task_files.py <input.json> [--dry-run]
 | `tasks[].labels`             | Yes      | Array of GitHub labels                                |
 | `tasks[].blocked_by`         | Yes      | Array of sequence numbers this task depends on        |
 | `tasks[].blocks`             | Yes      | Array of sequence numbers this task unblocks          |
-| `tasks[].architect_response` | No       | Markdown from nxs-architect LLD elaboration           |
+| `tasks[].architect_response` | Yes      | Markdown LLD content from nxs-decomposer (inline)     |
 
 ## Architect Response Format
 
