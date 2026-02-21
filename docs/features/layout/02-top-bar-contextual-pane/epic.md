@@ -6,6 +6,7 @@ type: enhancement
 status: draft
 complexity: S-M
 estimated_duration: "1-1.5 days"
+link: "#13"
 ---
 
 # Epic: Top Bar & Contextual Pane
@@ -188,6 +189,10 @@ Together with the core shell and sidebar from Epic 01, this epic establishes the
 
 None - requirements are clear from the Feature brief.
 
+## Implementation Plan
+
+See [tasks.md](./tasks.md) for the detailed task breakdown and dependency graph.
+
 ---
 
 ## Appendix
@@ -224,3 +229,4 @@ None - requirements are clear from the Feature brief.
 - [Epic 01: Core Layout Shell & Sidebar](https://github.com/sameera/ripples/tree/main/docs/features/layout/01-core-layout-shell-sidebar/epic.md) - Prerequisite epic
 - [Epic 03: Mobile Responsive Layout](https://github.com/sameera/ripples/tree/main/docs/features/layout/03-mobile-responsive-layout/epic.md) - Mobile adaptation
 - [Epic 04: Command Palette & Keyboard Nav](https://github.com/sameera/ripples/tree/main/docs/features/layout/04-command-palette-keyboard-nav/epic.md) - Can parallel with this or Epic 03
+- [Post-Implementation Report](https://github.com/sameera/ripples/tree/main/docs/features/layout/02-top-bar-contextual-pane/PIR.md) - Implementation summary and key decisions
