@@ -4,6 +4,8 @@ description: Consistency and completeness validator. Analyzes epic/HLD/task alig
 category: engineering
 tools: Read, Grep, Glob, Write, Edit
 model: sonnet
+color: pink
+memory: project
 ---
 
 # Role
@@ -67,14 +69,14 @@ Identify tasks that should be consolidated.
 
 **Detection Heuristics**:
 
-| Heuristic               | Pattern                                                         | Action                       |
-| ----------------------- | --------------------------------------------------------------- | ---------------------------- |
-| Effort Too Small        | Task effort < 1 hour                                            | Merge into related task      |
-| Export/Barrel File Only | Sole purpose is creating index.ts to re-export                  | Add to originating task      |
-| Verification-Only       | Sole purpose is running tests/validation created by other tasks | Merge into source task       |
-| Over-Decomposition      | Epic complexity S with > 5 tasks; M with > 10 tasks            | Recommend merge candidates   |
-| Could-Be-Merged         | Adjacent tasks in same category with combined effort < S (4h)   | Suggest merge                |
-| Effort Disproportion    | Sum of task low-effort exceeds 2x epic estimated duration       | Flag as HIGH                 |
+| Heuristic               | Pattern                                                         | Action                     |
+| ----------------------- | --------------------------------------------------------------- | -------------------------- |
+| Effort Too Small        | Task effort < 1 hour                                            | Merge into related task    |
+| Export/Barrel File Only | Sole purpose is creating index.ts to re-export                  | Add to originating task    |
+| Verification-Only       | Sole purpose is running tests/validation created by other tasks | Merge into source task     |
+| Over-Decomposition      | Epic complexity S with > 5 tasks; M with > 10 tasks             | Recommend merge candidates |
+| Could-Be-Merged         | Adjacent tasks in same category with combined effort < S (4h)   | Suggest merge              |
+| Effort Disproportion    | Sum of task low-effort exceeds 2x epic estimated duration       | Flag as HIGH               |
 
 **Detection Patterns**:
 
@@ -90,12 +92,13 @@ Superfluous if:
 **Proportionality Check**: Compare task count against epic complexity (from `epic.md` frontmatter `complexity` field or inferred from estimated duration):
 
 | Epic Complexity | Max Tasks Before Flag | Severity |
-| --------------- | -------------------- | -------- |
-| S (1-3 days)    | 5                    | HIGH     |
-| M (1-2 weeks)   | 10                   | MEDIUM   |
-| L (2-4 weeks)   | 15                   | MEDIUM   |
+| --------------- | --------------------- | -------- |
+| S (1-3 days)    | 5                     | HIGH     |
+| M (1-2 weeks)   | 10                    | MEDIUM   |
+| L (2-4 weeks)   | 15                    | MEDIUM   |
 
 If task count exceeds the threshold:
+
 - **Finding**: `[A-OD1] Over-decomposed: {N} tasks for {complexity}-complexity epic (target: {max})`
 - **Severity**: HIGH for S-complexity, MEDIUM for M/L
 - **Remediation**: AUTO — identify merge candidates using:
@@ -104,6 +107,7 @@ If task count exceeds the threshold:
   3. Simple presentation components that share a parent directory
 
 **Effort Disproportion Check**: Parse `epic.md` for complexity rating or estimated duration. Sum the lower bound of all task effort estimates. If total > 2x epic duration:
+
 - **Finding**: `[M-ED1] Effort disproportion: task total ({X} hours) exceeds 2x epic estimate ({Y} days)`
 - **Severity**: HIGH
 - **Remediation**: MANUAL — either tasks are over-estimated or epic complexity is underestimated
@@ -114,14 +118,14 @@ When `--remediate` mode is enabled, automatically fix AUTO-classified findings.
 
 **Remediation Actions**:
 
-| Finding Type                    | Action                                                     |
-| ------------------------------- | ---------------------------------------------------------- |
-| Superfluous: Barrel/export task | Merge export statements into originating task, delete file |
-| Superfluous: Verification-only  | Merge verification steps into source task, delete file     |
-| Superfluous: Effort < 1 hour    | Merge into blocked-by task (or first task it blocks)       |
+| Finding Type                    | Action                                                      |
+| ------------------------------- | ----------------------------------------------------------- |
+| Superfluous: Barrel/export task | Merge export statements into originating task, delete file  |
+| Superfluous: Verification-only  | Merge verification steps into source task, delete file      |
+| Superfluous: Effort < 1 hour    | Merge into blocked-by task (or first task it blocks)        |
 | Superfluous: Over-decomposition | Merge adjacent same-category tasks with combined effort < S |
-| Task numbering gaps             | Renumber tasks sequentially after merges                   |
-| Terminology drift               | Normalize to HLD canonical term across all tasks           |
+| Task numbering gaps             | Renumber tasks sequentially after merges                    |
+| Terminology drift               | Normalize to HLD canonical term across all tasks            |
 
 **Process**:
 
@@ -163,30 +167,30 @@ When `--remediate` mode is enabled, automatically fix AUTO-classified findings.
 
 ```json
 {
-    "task_review_path": "tasks/task-review.md",
-    "metrics": {
-        "total_findings": 12,
-        "auto_remediated": 8,
-        "remaining": {
-            "critical": 0,
-            "high": 2,
-            "medium": 3,
-            "low": 1
-        },
-        "coverage": {
-            "user_stories": 85,
-            "hld_components": 92,
-            "nfrs": 78
-        },
-        "final_task_count": 8
+  "task_review_path": "tasks/task-review.md",
+  "metrics": {
+    "total_findings": 12,
+    "auto_remediated": 8,
+    "remaining": {
+      "critical": 0,
+      "high": 2,
+      "medium": 3,
+      "low": 1
     },
-    "remediation_applied": {
-        "tasks_merged": 3,
-        "terminology_fixes": 5,
-        "tasks_renumbered": true
+    "coverage": {
+      "user_stories": 85,
+      "hld_components": 92,
+      "nfrs": 78
     },
-    "status": "success",
-    "blocking_issues": false
+    "final_task_count": 8
+  },
+  "remediation_applied": {
+    "tasks_merged": 3,
+    "terminology_fixes": 5,
+    "tasks_renumbered": true
+  },
+  "status": "success",
+  "blocking_issues": false
 }
 ```
 
