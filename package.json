@@ -9,7 +9,6 @@
   "private": true,
   "packageManager": "pnpm@10.28.0",
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.1",
     "@eslint/js": "^9.8.0",
     "@nx/devkit": "22.3.3",
     "@nx/esbuild": "22.3.3",

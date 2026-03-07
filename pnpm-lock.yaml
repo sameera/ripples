@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@aws-sdk/client-dynamodb':
-        specifier: ^3.995.0
-        version: 3.995.0
       '@aws-sdk/lib-dynamodb':
         specifier: ^3.995.0
         version: 3.995.0(@aws-sdk/client-dynamodb@3.995.0)
@@ -63,9 +60,9 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2
     devDependencies:
-      '@axe-core/playwright':
-        specifier: ^4.11.1
-        version: 4.11.1(playwright-core@1.57.0)
+      '@aws-sdk/client-dynamodb':
+        specifier: ^3.995.0
+        version: 3.995.0
       '@eslint/js':
         specifier: ^9.8.0
         version: 9.39.2
@@ -371,11 +368,6 @@ packages:
   '@aws/lambda-invoke-store@0.2.3':
     resolution: {integrity: sha512-oLvsaPMTBejkkmHhjf09xTgk71mOqyr/409NKhRIL08If7AhVfUsJhVsx386uJaqNd42v9kWamQ9lFbkoC2dYw==}
     engines: {node: '>=18.0.0'}
-
-  '@axe-core/playwright@4.11.1':
-    resolution: {integrity: sha512-mKEfoUIB1MkVTht0BGZFXtSAEKXMJoDkyV5YZ9jbBmZCcWDz71tegNsdTkIN8zc/yMi5Gm2kx7Z5YQ9PfWNAWw==}
-    peerDependencies:
-      playwright-core: '>= 1.0.0'
 
   '@babel/code-frame@7.28.6':
     resolution: {integrity: sha512-JYgintcMjRiCvS8mMECzaEn+m3PfoQiyqukOMCCVQtoJGYJw8j/8LBJEiqkHLkfwCcs74E3pbAUFNg7d9VNJ+Q==}
@@ -7586,11 +7578,6 @@ snapshots:
       tslib: 2.8.1
 
   '@aws/lambda-invoke-store@0.2.3': {}
-
-  '@axe-core/playwright@4.11.1(playwright-core@1.57.0)':
-    dependencies:
-      axe-core: 4.11.1
-      playwright-core: 1.57.0
 
   '@babel/code-frame@7.28.6':
     dependencies:
