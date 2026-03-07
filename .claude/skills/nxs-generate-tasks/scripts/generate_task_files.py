@@ -42,6 +42,60 @@ import urllib.error
 from pathlib import Path
 
 
+def _parse_simple_yaml(content: str) -> dict[str, dict[str, str]]:
+    """Parse the 2-level nested config.yml format without external dependencies."""
+    result: dict[str, dict[str, str]] = {}
+    current_section: str | None = None
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if not line[0].isspace() and ":" in line:
+            key = line.split(":")[0].strip()
+            result[key] = {}
+            current_section = key
+        elif current_section and ":" in line:
+            key, _, value = line.partition(":")
+            result[current_section][key.strip()] = value.strip()
+    return result
+
+
+def read_delivery_config(project_root: Path) -> dict[str, str]:
+    """Read delivery config from config.yml (preferred) or config.json (fallback).
+
+    Returns a normalized dict with keys: docRoot, project, epicType.
+    """
+    delivery_dir = project_root / "docs" / "system" / "delivery"
+
+    yml_path = delivery_dir / "config.yml"
+    if yml_path.exists():
+        try:
+            with open(yml_path, encoding="utf-8") as f:
+                raw = _parse_simple_yaml(f.read())
+            result: dict[str, str] = {}
+            cross_ref = raw.get("cross-ref", {})
+            github = raw.get("github", {})
+            if cross_ref.get("docs-root"):
+                result["docRoot"] = cross_ref["docs-root"]
+            if github.get("project"):
+                result["project"] = github["project"]
+            if github.get("epic-type"):
+                result["epicType"] = github["epic-type"]
+            return result
+        except OSError:
+            pass
+
+    json_path = delivery_dir / "config.json"
+    if json_path.exists():
+        try:
+            with open(json_path, encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    return {}
+
+
 # Remote template URL for fallback download
 TEMPLATE_URL = "https://raw.githubusercontent.com/sameera/nexus/refs/heads/main/common/docs/system/delivery/task-template.md"
 
@@ -171,7 +225,10 @@ def compute_branch_name(epic_type: str, epic_number: int, epic_title: str) -> st
 def parse_valid_labels(project_root: Path) -> set[str] | None:
     """Parse valid labels from task-labels.md file.
 
-    Looks for a markdown table with label names in the first column.
+    Supports two formats:
+    1. Section headers: ## Label Name (`label-name`, #color)
+    2. Markdown table rows: | `label-name` | description |
+
     Returns None if the file doesn't exist (validation skipped).
     Returns empty set if file exists but no labels found.
     """
@@ -183,16 +240,18 @@ def parse_valid_labels(project_root: Path) -> set[str] | None:
     content = labels_path.read_text()
     labels: set[str] = set()
 
-    # Look for table rows: | label-name | description |
-    # Skip header row and separator row (|---|---|)
+    # Format 1: section headers like ## Infrastructure (`infrastructure`, #0e8a16)
+    header_pattern = r"^##\s+[\w][\w\s]*\s+\(`([a-z][a-z0-9-]*)`,\s*#[0-9a-fA-F]+"
+    # Format 2: table rows like | `label-name` | description |
     table_row_pattern = r"^\|\s*`?([a-z][a-z0-9-]*)`?\s*\|"
+    # Skip header-like entries
+    reserved = {"label", "name", "---", "-", "use", "purpose"}
 
     for line in content.split("\n"):
-        match = re.match(table_row_pattern, line, re.IGNORECASE)
+        match = re.match(header_pattern, line) or re.match(table_row_pattern, line, re.IGNORECASE)
         if match:
             label = match.group(1).lower().strip("`")
-            # Skip header-like entries
-            if label not in ("label", "name", "---", "-"):
+            if label not in reserved:
                 labels.add(label)
 
     return labels
@@ -220,22 +279,8 @@ def validate_labels(
 
 
 def read_project_from_config(project_root: Path) -> str:
-    """Read the GitHub project name from delivery config.
-
-    Looks for docs/system/delivery/config.json and returns the 'project'
-    value, or empty string if not found.
-    """
-    config_path = project_root / "docs" / "system" / "delivery" / "config.json"
-
-    if not config_path.exists():
-        return ""
-
-    try:
-        with open(config_path) as f:
-            config = json.load(f)
-        return config.get("project", "")
-    except (json.JSONDecodeError, OSError):
-        return ""
+    """Read the GitHub project name from delivery config (config.yml or config.json)."""
+    return read_delivery_config(project_root).get("project", "")
 
 
 def compute_workspace_path(epic_number: int, repo_name: str) -> str:

@@ -151,27 +151,23 @@ Given that capability description, do this:
         - "Implement tag inheritance from parent spaces" → `tag-inheritance`
         - "Add bulk tag operations for administrators" → `bulk-tag-operations`
 
-4. **Create the Epic directory using sequential-name-generator**:
+4. **Create the Epic directory**:
 
-    a. Use the `sequential-name-generator` skill to generate the folder name:
+    a. Use the kebab-case name from step 3 directly as the folder name (no prefix):
 
     ```bash
-    python ./scripts/next_sequential_name.py "<feature-directory>" "<epic-name>"
+    mkdir -p "<feature-directory>/<epic-name>"
     ```
 
     - `<feature-directory>` is the directory containing the Feature's README.md
-    - `<epic-name>` is the kebab-case name generated in step 3 (no extension = folder mode)
+    - `<epic-name>` is the kebab-case name generated in step 3
 
-    b. The script will return a name like `03-space-scoped-tags`
+    b. The epic document will be saved as `epic.md` inside this directory:
+    `<feature-directory>/<epic-name>/epic.md`
 
-    c. Create the epic directory:
-
-    ```bash
-    mkdir -p "<feature-directory>/<sequential-epic-folder>"
-    ```
-
-    d. The epic document will be saved as `epic.md` inside this directory:
-    `<feature-directory>/<sequential-epic-folder>/epic.md`
+    c. After GitHub issue creation (Step 12), the folder will be renamed to
+    `<issue-number>-<epic-name>/` and the file to `<issue-number>-epic.md`.
+    If the user skips issue creation, the folder and file remain unprefixed.
 
 5. **Handle external plan files** (if referenced):
 
@@ -433,10 +429,13 @@ estimated_duration: "[X days/weeks - likely case from architect]"
 
     | # | Epic | Complexity | Duration | File |
     |---|------|-----------|----------|------|
-    | 1 | [Epic Title] | [S/M] | [X days] | `<path-to-epic.md>` |
-    | 2 | [Epic Title 2] | [S/M] | [X days] | `<path-to-epic2.md>` |
+    | 1 | [Epic Title] | [S/M] | [X days] | `<feature-directory>/<epic-name>/epic.md` |
+    | 2 | [Epic Title 2] | [S/M] | [X days] | `<feature-directory>/<epic-name2>/epic.md` |
 
     **Feature**: [Feature Name]
+
+    > **Note**: After issue creation, each folder will be renamed from `<epic-name>/` to
+    > `<issue-number>-<epic-name>/` and the file renamed to `<issue-number>-epic.md`.
 
     ---
 
@@ -458,46 +457,64 @@ estimated_duration: "[X days/weeks - likely case from architect]"
 
 12. **Create GitHub Issues**:
 
-    For each epic document generated, invoke the `nxs-gh-create-epic` skill:
+    For each epic document generated, invoke the `nxs-gh-create-epic` skill and then rename the folder and file:
 
     ```bash
-    python ./.claude/skills/nxs-gh-create-epic/scripts/nxs_gh_create_epic.py "<path-to-epic.md>"
+    python ./.claude/skills/nxs-gh-create-epic/scripts/nxs_gh_create_epic.py "<feature-directory>/<epic-name>/epic.md"
     ```
+
+    After the skill runs, extract the issue number and rename:
+
+    ```bash
+    # Extract issue number from updated frontmatter (skill sets link: "#<number>")
+    ISSUE_NUM=$(grep '^link:' "<feature-directory>/<epic-name>/epic.md" | grep -o '[0-9]*')
+
+    # Rename the epic file to <issue-number>-epic.md
+    mv "<feature-directory>/<epic-name>/epic.md" \
+       "<feature-directory>/<epic-name>/${ISSUE_NUM}-epic.md"
+
+    # Rename the folder from <epic-name> to <issue-number>-<epic-name>
+    mv "<feature-directory>/<epic-name>" \
+       "<feature-directory>/${ISSUE_NUM}-<epic-name>"
+    ```
+
+    Final path: `<feature-directory>/<issue-number>-<epic-name>/<issue-number>-epic.md`
+    Example: `docs/features/tagging/42-space-scoped-tags/42-epic.md`
 
     a. **For multiple epics** (Option 2 - right-sizing):
     - Invoke the skill once per epic document, in sequential order
-    - Each invocation creates a separate GitHub issue and updates that epic's frontmatter with `link: "#<issue-number>"`
+    - Perform the rename steps above after each invocation before moving to the next epic
 
     b. **Verify success**:
-    - After each invocation, confirm the `epic.md` frontmatter now contains a `link` attribute
-    - If the skill fails: Report the error to the user and stop. Do not proceed to commit.
+    - After each invocation and rename, confirm the final `<issue-number>-epic.md` exists and its frontmatter contains a `link` attribute
+    - If the skill fails: Report the error to the user and stop. Do not rename or proceed to commit.
 
     c. **Collect results**:
-    - Store the issue number and URL for each epic for the completion report
+    - Store the issue number, URL, and final file path for each epic for the completion report
 
 13. **Commit Epic Files**:
 
     After all GitHub issues are created successfully, commit the epic files to git:
 
     ```bash
-    git add <path-to-epic.md> [<path-to-additional-epic.md> ...]
+    git add <feature-directory>/<issue-number>-<epic-name>/<issue-number>-epic.md [...]
     git commit -m "epics: <Feature Name>"
     ```
 
-    - Include ALL `epic.md` files generated in this session (they now contain `link` attributes)
+    - Include ALL `<issue-number>-epic.md` files generated in this session (they now contain `link` attributes and are in their final renamed locations)
     - The `<Feature Name>` comes from the Feature README.md frontmatter `feature` attribute
     - If the commit fails (e.g., no changes or hook failure), report the error but do not stop the workflow
 
 14. **Report completion** with:
     - Feature name and link to Feature README (using absolute URL)
-    - Full file path where epic document was saved
+    - Full file path where epic document was saved (final path: `<issue-number>-<epic-name>/<issue-number>-epic.md`, or unprefixed path if issue creation was skipped)
     - Epic summary (name, story count, complexity rating)
     - **GitHub issue link(s)** for each epic (if created), e.g., `Epic: [Epic Title](#<issue-number>)`
     - Any clarifications needed before the epic is considered complete
     - If multiple epics were generated (Option 2), list all with their paths **and issue links**
     - Suggested next steps:
         - If issues were created: "Run `/nxs.hld` on an epic to generate the High-Level Design"
-        - If issues were NOT created: "Run `/nxs.tasks` when ready — it will create the GitHub issue if needed"
+        - If issues were NOT created: "Run `/nxs.tasks` when ready — it will create the GitHub issue and rename the folder/file at that point"
 
 ---
 
@@ -533,7 +550,7 @@ python ./.claude/skills/nxs-abs-doc-path/get_abs_doc_path.py "docs/features/tagg
 python ./.claude/skills/nxs-abs-doc-path/get_abs_doc_path.py "docs/features/tagging/README.md" "docs/system/delivery/task-labels.md"
 ```
 
-The script reads the `docRoot` from `docs/system/delivery/config.json` and constructs the full URL.
+The script reads the docs root from `docs/system/delivery/config.yml` (`cross-ref.docs-root`) or `docs/system/delivery/config.json` (`docRoot`) and constructs the full URL. `config.yml` takes precedence when both exist.
 
 **Example transformation:**
 
@@ -594,16 +611,26 @@ After running this command for a "Tagging" feature:
 ```
 docs/features/tagging/
 ├── README.md                      # Feature Brief (feature: "Tagging")
-├── 01-space-scoped-tags/
-│   └── epic.md                    # First epic (M complexity)
-├── 02-private-user-tags/
-│   └── epic.md                    # Second epic (S complexity)
-├── 03-tag-inheritance/
-│   └── epic.md                    # Third epic - split from larger scope
-├── 04-tag-inheritance-advanced/
-│   └── epic.md                    # Fourth epic - remainder of split
-└── 05-bulk-tag-operations/
-    └── epic.md                    # Fifth epic (M complexity)
+├── 42-space-scoped-tags/
+│   └── 42-epic.md                 # First epic (M complexity, GitHub issue #42)
+├── 43-private-user-tags/
+│   └── 43-epic.md                 # Second epic (S complexity, GitHub issue #43)
+├── 44-tag-inheritance/
+│   └── 44-epic.md                 # Third epic - split from larger scope (issue #44)
+├── 45-tag-inheritance-advanced/
+│   └── 45-epic.md                 # Fourth epic - remainder of split (issue #45)
+└── 46-bulk-tag-operations/
+    └── 46-epic.md                 # Fifth epic (M complexity, GitHub issue #46)
+```
+
+Before issue creation (intermediate state), folders are unprefixed:
+
+```
+docs/features/tagging/
+├── README.md
+├── space-scoped-tags/
+│   └── epic.md                    # Pending issue creation → becomes 42-space-scoped-tags/42-epic.md
+└── ...
 ```
 
 ### Complexity-to-Sprint Mapping Reference

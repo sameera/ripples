@@ -408,6 +408,47 @@ Implemented in commit `{commit_hash}` on branch `{branch_name}`.
 
         return commit_hash
 
+    def push_and_create_pr(
+        self,
+        worktree_path: Path,
+        branch_name: str,
+        issue_number: int,
+        issue_title: str,
+    ) -> Optional[str]:
+        """Push branch to origin and create a pull request targeting main."""
+        info(f"Pushing branch {branch_name} to origin...")
+        result = run_command(
+            ["git", "push", "--set-upstream", "origin", branch_name],
+            cwd=worktree_path,
+            check=False,
+        )
+        if result.returncode != 0:
+            warn(f"Push failed: {result.stderr.strip()}")
+            return None
+        success(f"Pushed branch {branch_name}")
+
+        info("Creating pull request...")
+        safe_title = re.sub(r"[^\w\s\-.,!?()#/]", "", issue_title).strip()
+        pr_body = f"Implements #{issue_number}\n\n---\n*Automated via nxs.yolo*"
+
+        result = run_command(
+            [
+                "gh", "pr", "create",
+                "--base", "main",
+                "--head", branch_name,
+                "--title", f"feat: {safe_title}",
+                "--body", pr_body,
+            ],
+            check=False,
+        )
+        if result.returncode != 0:
+            warn(f"PR creation failed: {result.stderr.strip()}")
+            return None
+
+        pr_url = result.stdout.strip()
+        success(f"Pull request created: {pr_url}")
+        return pr_url
+
 
 # ------------------------------------------------------------------------------
 # Main Processing
@@ -513,7 +554,12 @@ class YoloProcessor:
         # Update state: mark success
         self.state_manager.update_success(issue_number)
 
-        # Phase 7: Cleanup (keep worktree by default in YOLO for inspection)
+        # Phase 7: Push branch and create PR
+        self.github_manager.push_and_create_pr(
+            worktree_path, branch_name, issue_number, issue_title
+        )
+
+        # Phase 8: Cleanup (keep worktree by default in YOLO for inspection)
         self.workspace_manager.cleanup_worktree(worktree_path, keep=True)
 
         success(f"Issue #{issue_number} complete!")
@@ -590,7 +636,8 @@ Workflow:
     2. Syncs environment (npm install, etc.)
     3. Invokes streamlined nxs.yolo.dev command
     4. Commits changes and closes issue on success
-    5. Cleans up worktree
+    5. Pushes branch and opens a PR against main
+    6. Keeps worktree for inspection
 
 Resume behavior:
     - Reverts failed issue's worktree to last commit (clean slate)

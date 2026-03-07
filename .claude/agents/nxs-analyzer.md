@@ -4,8 +4,6 @@ description: Consistency and completeness validator. Analyzes epic/HLD/task alig
 category: engineering
 tools: Read, Grep, Glob, Write, Edit
 model: sonnet
-color: pink
-memory: project
 ---
 
 # Role
@@ -63,20 +61,32 @@ Validate task LLDs against HLD specifications.
 - Technology choices must match HLD stack
 - Flag: Technical deviations from HLD specifications
 
-### 4. Superfluous Task Detection
+### 4. Duplicate & Redundancy Detection
+
+Identify tasks that overlap in scope or implementation.
+
+**Duplicate Detection Heuristics**:
+
+| Heuristic | Pattern | Action |
+|-----------|---------|--------|
+| Same files | Two tasks list the same file in their `FILES` section | Flag as potential conflict; merge or clarify ownership |
+| Same component | Two tasks implement the same component or service | Flag; merge into one task or split responsibilities |
+| Same API endpoint | Two tasks define the same route handler | Flag as CRITICAL conflict |
+| Overlapping acceptance criteria | ≥50% of criteria text overlap between tasks | Flag as redundant; merge into the earlier task |
+
+**Detection**: Cross-reference the `FILES`, `INTERFACES`, and `ACCEPTANCE_CRITERIA` sections of each task against every other task in the set.
+
+### 5. Superfluous Task Detection
 
 Identify tasks that should be consolidated.
 
 **Detection Heuristics**:
 
-| Heuristic               | Pattern                                                         | Action                     |
-| ----------------------- | --------------------------------------------------------------- | -------------------------- |
-| Effort Too Small        | Task effort < 1 hour                                            | Merge into related task    |
-| Export/Barrel File Only | Sole purpose is creating index.ts to re-export                  | Add to originating task    |
-| Verification-Only       | Sole purpose is running tests/validation created by other tasks | Merge into source task     |
-| Over-Decomposition      | Epic complexity S with > 5 tasks; M with > 10 tasks             | Recommend merge candidates |
-| Could-Be-Merged         | Adjacent tasks in same category with combined effort < S (4h)   | Suggest merge              |
-| Effort Disproportion    | Sum of task low-effort exceeds 2x epic estimated duration       | Flag as HIGH               |
+| Heuristic               | Pattern                                                         | Action                       |
+| ----------------------- | --------------------------------------------------------------- | ---------------------------- |
+| Effort Too Small        | Task effort < 1 hour                                            | Merge into related task      |
+| Export/Barrel File Only | Sole purpose is creating index.ts to re-export                  | Add to originating task      |
+| Verification-Only       | Sole purpose is running tests/validation created by other tasks | Merge into source task       |
 
 **Detection Patterns**:
 
@@ -87,45 +97,20 @@ Superfluous if:
   - Effort estimate contains "30 min", "0.5 hour", "<1 hour", "15 min"
 ```
 
-### Over-Decomposition Detection
-
-**Proportionality Check**: Compare task count against epic complexity (from `epic.md` frontmatter `complexity` field or inferred from estimated duration):
-
-| Epic Complexity | Max Tasks Before Flag | Severity |
-| --------------- | --------------------- | -------- |
-| S (1-3 days)    | 5                     | HIGH     |
-| M (1-2 weeks)   | 10                    | MEDIUM   |
-| L (2-4 weeks)   | 15                    | MEDIUM   |
-
-If task count exceeds the threshold:
-
-- **Finding**: `[A-OD1] Over-decomposed: {N} tasks for {complexity}-complexity epic (target: {max})`
-- **Severity**: HIGH for S-complexity, MEDIUM for M/L
-- **Remediation**: AUTO — identify merge candidates using:
-  1. Tasks in the same category with combined effort < S (4 hours)
-  2. Infrastructure tasks (package install, config, scaffolding) that can be bundled
-  3. Simple presentation components that share a parent directory
-
-**Effort Disproportion Check**: Parse `epic.md` for complexity rating or estimated duration. Sum the lower bound of all task effort estimates. If total > 2x epic duration:
-
-- **Finding**: `[M-ED1] Effort disproportion: task total ({X} hours) exceeds 2x epic estimate ({Y} days)`
-- **Severity**: HIGH
-- **Remediation**: MANUAL — either tasks are over-estimated or epic complexity is underestimated
-
 ### 5. Auto-Remediation
 
 When `--remediate` mode is enabled, automatically fix AUTO-classified findings.
 
 **Remediation Actions**:
 
-| Finding Type                    | Action                                                      |
-| ------------------------------- | ----------------------------------------------------------- |
-| Superfluous: Barrel/export task | Merge export statements into originating task, delete file  |
-| Superfluous: Verification-only  | Merge verification steps into source task, delete file      |
-| Superfluous: Effort < 1 hour    | Merge into blocked-by task (or first task it blocks)        |
-| Superfluous: Over-decomposition | Merge adjacent same-category tasks with combined effort < S |
-| Task numbering gaps             | Renumber tasks sequentially after merges                    |
-| Terminology drift               | Normalize to HLD canonical term across all tasks            |
+| Finding Type                    | Action                                                     |
+| ------------------------------- | ---------------------------------------------------------- |
+| Superfluous: Barrel/export task | Merge export statements into originating task, delete file |
+| Superfluous: Verification-only  | Merge verification steps into source task, delete file     |
+| Superfluous: Effort < 1 hour    | Merge into blocked-by task (or first task it blocks)       |
+| Duplicate: Overlapping scope    | Merge weaker/later task into the earlier or more complete task; update dependencies |
+| Task numbering gaps             | Renumber tasks sequentially after merges                   |
+| Terminology drift               | Normalize to HLD canonical term across all tasks           |
 
 **Process**:
 
@@ -140,21 +125,21 @@ When `--remediate` mode is enabled, automatically fix AUTO-classified findings.
 
 **Required Context** (provided by invoker):
 
-- `epic_directory`: Path to epic directory containing epic.md, HLD.md, tasks/
+- `epic_directory`: Path to epic directory containing *epic.md, *hld.md, tasks/
 - `remediate`: Boolean flag for auto-remediation mode (default: false)
 
 **Required Files** (in epic_directory):
 
-| File       | Location                           | Required |
-| ---------- | ---------------------------------- | -------- |
-| `epic.md`  | `{epic-directory}/epic.md`         | Yes      |
-| `HLD.md`   | `{epic-directory}/HLD.md`          | Yes      |
-| Task files | `{epic-directory}/tasks/TASK-*.md` | Yes      |
+| File       | Location                            | Required |
+| ---------- | ----------------------------------- | -------- |
+| `*epic.md` | `{epic-directory}/*epic.md` (glob)  | Yes      |
+| `*hld.md`  | `{epic-directory}/*hld.md` (glob)   | Yes      |
+| Task files | `{epic-directory}/tasks/TASK-*.md`  | Yes      |
 
 **Abort Conditions**:
 
-- Missing `epic.md` → Report: "Run `/nxs.epic` first"
-- Missing `HLD.md` → Report: "Run `/nxs.hld` first"
+- Missing `*epic.md` → Report: "Run `/nxs.epic` first"
+- Missing `*hld.md` → Report: "Run `/nxs.hld` first"
 - Missing `tasks/` → Report: "Run `/nxs.tasks` first"
 
 ## Output Contract
@@ -167,30 +152,32 @@ When `--remediate` mode is enabled, automatically fix AUTO-classified findings.
 
 ```json
 {
-  "task_review_path": "tasks/task-review.md",
-  "metrics": {
-    "total_findings": 12,
-    "auto_remediated": 8,
-    "remaining": {
-      "critical": 0,
-      "high": 2,
-      "medium": 3,
-      "low": 1
+    "task_review_path": "tasks/task-review.md",
+    "metrics": {
+        "total_findings": 12,
+        "auto_remediated": 8,
+        "remaining": {
+            "critical": 0,
+            "high": 2,
+            "medium": 3,
+            "low": 1
+        },
+        "coverage": {
+            "user_stories": 85,
+            "hld_components": 92,
+            "nfrs": 78
+        },
+        "final_task_count": 8
     },
-    "coverage": {
-      "user_stories": 85,
-      "hld_components": 92,
-      "nfrs": 78
+    "remediation_applied": {
+        "tasks_merged": 3,
+        "terminology_fixes": 5,
+        "tasks_renumbered": true,
+        "iterations": 2,
+        "converged": true
     },
-    "final_task_count": 8
-  },
-  "remediation_applied": {
-    "tasks_merged": 3,
-    "terminology_fixes": 5,
-    "tasks_renumbered": true
-  },
-  "status": "success",
-  "blocking_issues": false
+    "status": "success",
+    "blocking_issues": false
 }
 ```
 
@@ -206,11 +193,11 @@ When `--remediate` mode is enabled, automatically fix AUTO-classified findings.
 
 Load only sections needed for analysis:
 
-**From `epic.md`**:
+**From `*epic.md`**:
 
 - Frontmatter, User Stories, Business Value, Success Metrics, Dependencies, Assumptions, Out of Scope
 
-**From `HLD.md`**:
+**From `*hld.md`**:
 
 - Executive Summary, Complexity Assessment, System Context, Requirements Analysis, Architecture Overview, Data Model, API Design, Security, Implementation Phases, Risk Assessment, Testing Strategy, Success Criteria
 
@@ -230,14 +217,13 @@ Create internal representations for cross-referencing:
 
 Run all detection passes (limit to 50 findings, summarize overflow):
 
-A. Epic ↔ Task Coverage Gaps
-B. HLD ↔ Task Coverage Gaps
-C. Epic ↔ HLD Alignment
-D. Task ↔ Task Logical Inconsistencies
-E. HLD ↔ Task Technical Inconsistencies
-F. Superfluous Task Detection
-G. Redundancy Detection
-H. Over-Decomposition Detection
+A. Epic ↔ Task Coverage Gaps — user stories with zero task coverage
+B. HLD ↔ Task Coverage Gaps — HLD components, API endpoints, data entities, NFRs with no task coverage
+C. Epic ↔ HLD Alignment — scope drift between product intent and technical design
+D. Task ↔ Task Logical Inconsistencies — circular dependencies, conflicting implementations, terminology drift
+E. HLD ↔ Task Technical Inconsistencies — file paths, interfaces, API routes deviating from HLD spec
+F. Superfluous Task Detection — barrel/export-only, verification-only, effort < 1hr tasks
+G. Duplicate & Redundancy Detection — same files/components/endpoints in multiple tasks, overlapping acceptance criteria
 
 ### Step 5: Classify Findings
 
@@ -257,12 +243,29 @@ H. Over-Decomposition Detection
 
 ### Step 6: Apply Auto-Remediation (if enabled)
 
-If `--remediate` flag is set:
+If `--remediate` flag is set, run remediation in a **convergence loop** (max 3 iterations):
 
-1. Execute remediation for all AUTO-classified findings
-2. Update affected task files
-3. Renumber tasks sequentially
-4. Update task-review.md with remediation log
+**Why loop**: Remediation actions (merges, renumbering) can expose new AUTO-fixable issues — e.g., a merge may create a broken `blocked_by` reference, or renumbering may reveal a new terminology mismatch.
+
+**Each iteration**:
+
+1. Execute remediation for all current AUTO-classified findings
+2. Update affected task files (merge source into target, delete source file)
+3. Update `blocked_by`/`blocks` references in remaining tasks
+4. Renumber tasks sequentially
+5. Normalize terminology to HLD canonical terms
+6. Re-run detection passes **A, D, F, G** only (those affected by structural changes):
+   - **A**: Epic ↔ Task Coverage Gaps
+   - **D**: Task ↔ Task Logical Inconsistencies (circular deps, broken references, terminology)
+   - **F**: Superfluous Task Detection
+   - **G**: Duplicate & Redundancy Detection
+
+**Loop exit conditions**:
+
+- **Stable**: No new AUTO-classified findings after re-run → exit, set `converged: true`
+- **Limit reached**: After 3 iterations, exit with warning and set `converged: false`; list remaining AUTO findings as MANUAL for human review
+
+Track total `iterations` and `converged` status in output metrics.
 
 ### Step 7: Generate task-review.md
 
@@ -289,7 +292,7 @@ Context:
   - Epic directory: {epic-directory}
   - Mode: auto-remediate
 Request:
-  - Run consistency analysis on epic.md, HLD.md, and tasks/*.md
+  - Run consistency analysis on *epic.md, *hld.md, and tasks/*.md
   - Apply auto-remediation for AUTO-classified findings
   - Generate tasks/task-review.md
   - Return metrics summary

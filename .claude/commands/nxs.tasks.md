@@ -20,11 +20,11 @@ Act as an experienced senior engineer performing technical decomposition and tas
 **CRITICAL**: Do NOT search for HLD files. Resolve the input source as follows:
 
 1. **If `$ARGUMENTS` contains a path to `task-review.md`**: Treat as **resume mode** — skip to Step 7
-2. **If `$ARGUMENTS` contains a file path to HLD.md**: Use that path directly
+2. **If `$ARGUMENTS` contains a file path to an HLD file (e.g., `42-hld.md`)**: Use that path directly
 3. **If a file is provided in context** (open in editor): Use that file as the HLD
 4. **Otherwise**: Stop and ask the user to either:
     - Open the HLD file in their editor and re-run the command, OR
-    - Provide the file path as an argument: `/nxs.tasks path/to/HLD.md`
+    - Provide the file path as an argument: `/nxs.tasks path/to/{issue}-hld.md`
     - Resume from review: `/nxs.tasks path/to/tasks/task-review.md`
 
 **Never** run `find`, `ls`, or search commands to locate HLD files.
@@ -36,13 +36,14 @@ When `task-review.md` is provided as input, the command enters **resume mode** t
 ## Validation
 
 1. **Verify directory structure**:
-    - Parent directory (of `tasks/`) must contain `epic.md` with `link` attribute (GitHub issue number)
-    - Parent directory must contain `HLD.md`
+    - Parent directory (of `tasks/`) must contain a file matching `*epic.md` with `link` attribute (GitHub issue number)
+    - Parent directory must contain a file matching `*hld.md`
     - `tasks/` folder must contain `TASK-*.md` files
     - If any missing, report error and exit with guidance
 
 2. **Extract epic context**:
-    - Parse `epic.md` frontmatter for `link` attribute → extract issue number
+    - Locate the file matching `*epic.md` in the parent directory
+    - Parse its frontmatter for `link` attribute → extract issue number
     - Count existing `TASK-*.md` files in `tasks/` folder
 
 3. **Parse task-review.md for metrics**:
@@ -60,8 +61,8 @@ When `task-review.md` is provided as input, the command enters **resume mode** t
 
 Before analyzing the HLD, ensure a GitHub issue exists for the parent epic:
 
-1. Locate the `epic.md` file in the same directory as the HLD file
-2. Parse the `epic.md` YAML frontmatter and check for a `link` attribute
+1. Locate the file matching `*epic.md` in the same directory as the HLD file
+2. Parse that file's YAML frontmatter and check for a `link` attribute
 
     a. **If `link` exists** (e.g., `link: "#42"`):
     - Extract the issue number from the `link` value
@@ -71,12 +72,12 @@ Before analyzing the HLD, ensure a GitHub issue exists for the parent epic:
     b. **If `link` is missing**:
     - Invoke the `nxs-gh-create-epic` skill:
       ```bash
-      python ./.claude/skills/nxs-gh-create-epic/scripts/nxs_gh_create_epic.py "<path-to-epic.md>"
+      python ./.claude/skills/nxs-gh-create-epic/scripts/nxs_gh_create_epic.py "<path-to-*epic.md>"
       ```
-    - Verify the `epic.md` frontmatter now contains a `link` attribute
+    - Verify the epic file's frontmatter now contains a `link` attribute
     - Extract and store the issue number from the `link` attribute for use in task generation
 
-3. If no `epic.md` exists in the HLD directory, warn the user and proceed without a parent issue.
+3. If no `*epic.md` file exists in the HLD directory, warn the user and proceed without a parent issue.
 
 ## 2. Load & Analyze HLD
 
@@ -93,18 +94,16 @@ Read the High-Level Design document and extract:
 
 After loading the HLD, validate the current epic's scope against sibling epics in the same feature directory.
 
-1. **Identify sibling epics**:
+1. **Identify sibling epics** (path scan only — do NOT read any files yet):
     - Determine the parent feature directory (parent of the current epic's directory)
-    - Scan for other `*/epic.md` files in sibling directories (e.g., `01-epic-a/epic.md`, `02-epic-b/epic.md`)
-    - If no sibling epics exist, skip this step entirely
+    - List `*/*epic.md` paths in sibling directories (e.g., `01-epic-a/epic.md`, `02-epic-b/my-epic.md`)
+    - **If the list is empty → skip this step entirely and proceed to Step 4**
 
-2. **Load sibling epic context** (lightweight scan — minimize token usage):
-    - For each sibling epic, read ONLY:
-        - Frontmatter: `epic` (title), `link` (issue number, if exists), `complexity`, `status`
-        - Out of Scope section (if present)
-    - Do NOT read the full epic body, user stories, or detailed descriptions
-    - Target: < 500 tokens per sibling epic
-    - **Fast exit**: If the current HLD's "Out of Scope" section explicitly references sibling epics by name (e.g., "Mobile behavior deferred to Epic 03"), scope boundaries are already well-defined — perform the quick scan but expect no findings
+2. **Load sibling epic context** (only reached if siblings exist):
+    - For each sibling epic, parse:
+        - Frontmatter only: `epic` (title), `link` (issue number, if exists), `complexity`, `status`
+        - User Stories section: story titles only (not full body)
+        - Out of Scope section
 
 3. **Cross-reference HLD scope with sibling epics**:
     - Compare the HLD's scope (Requirements Analysis, Architecture Overview) against sibling epic scopes
@@ -155,23 +154,25 @@ After loading the HLD, validate the current epic's scope against sibling epics i
 
 ## 4. Decompose into Tasks
 
+**Pre-step — load valid labels**: Read `common/docs/system/delivery/task-labels.md` and extract the valid label names (e.g., `infrastructure`, `backend`, `frontend`, `database`, `performance`, `integration`). Pass the path to the decomposer so it selects only valid labels.
+
 Delegate HLD decomposition to `nxs-decomposer`:
 
 1. Invoke `nxs-decomposer` with:
     - HLD file path
     - Epic issue number from Step 1
-    - Request: "Decompose into implementation tasks"
+    - Labels path: `common/docs/system/delivery/task-labels.md`
+    - Request: "Decompose into implementation tasks targeting 4–7 tasks; merge trivial items; each task must touch ≥3 files or contain meaningful logic changes"
 
 2. The decomposer will return structured JSON with:
-    - Sequenced tasks (≤2 days each, effort-sized) with inline `architect_response` (LLD content) for each task
+    - Sequenced tasks (≤2 days each, effort-sized)
     - Phase/category assignments (Infrastructure, Data Layer, Core Logic, API, Integration, Polish)
     - Dependency relationships (blocked_by/blocks)
     - Mermaid dependency graph
     - Parallelization opportunities
 
 3. Validate response:
-    - All tasks have required fields (sequence, title, category, summary, effort, labels, architect_response)
-    - Each `architect_response` contains `### Files` and `### Acceptance Criteria` sections
+    - All tasks have required fields (sequence, title, category, summary, effort, labels)
     - Dependencies form valid DAG (no cycles)
     - No task exceeds M size (≤2 days)
 
@@ -179,60 +180,90 @@ Delegate HLD decomposition to `nxs-decomposer`:
 
 ## 5. Generate Task Files
 
-Generate task files from the decomposer output using the generation script. The decomposer already provides `architect_response` (LLD content) inline for each task — no separate architect agent invocation is needed.
+Generate and write task files **one at a time** — do not accumulate all architect responses in memory before writing. Each task is written to disk immediately after its LLD is generated.
 
-**DO NOT** invoke `nxs-architect` for LLD content. The decomposer produces `architect_response` inline.
+### 5.1 Prepare Common Envelope
 
-### 5.1 Validate Decomposer Output
-
-Before proceeding, verify the decomposer output:
-
-- Every task object contains a non-empty `architect_response` field
-- Each `architect_response` contains at least `### Files` and `### Acceptance Criteria` sections
-- If any task is missing `architect_response`, report which tasks are missing and **STOP** — do not proceed with placeholder content
-
-### 5.2 Prepare Input JSON
-
-Assemble the decomposer output into the script's input format:
+Build the shared metadata JSON once and store it in memory (not on disk):
 
 ```json
 {
   "epic_number": {epic issue number from Step 1},
-  "epic_title": "{epic title from epic.md}",
-  "epic_type": "{enhancement|bug from epic.md}",
+  "epic_title": "{epic title from *epic.md}",
+  "epic_type": "{enhancement|bug from *epic.md}",
+  "output_dir": "{HLD directory}/tasks"
+}
+```
+
+Ensure the output directory exists:
+
+```bash
+mkdir -p "{HLD directory}/tasks"
+```
+
+### 5.2 Incremental Per-Task Generation Loop
+
+For each task from the decomposer output, in sequence order:
+
+**Step A — Generate LLD** (invoke `nxs-architect` in LLD-elaboration mode):
+
+```
+Invoke: nxs-architect
+Mode: LLD-elaboration (HLD is authoritative)
+Topic: Low-Level Design for TASK-{epic_number}.{sequence}: {title}
+HLD Content: [only the sections directly relevant to this task's category and summary]
+Task Context:
+  - Category: {category}
+  - Summary: {summary}
+  - Blocked by: {blocked_by}
+  - Blocks: {blocks}
+Request: Return ONLY these five sections as structured markdown — no preamble, no summary prose:
+  - FILES: List files to create/modify with purposes (must be ≥3 files or contain meaningful logic)
+  - INTERFACES: Key TypeScript interfaces/types
+  - KEY_DECISIONS: Table of decisions with rationale (extract from HLD)
+  - IMPLEMENTATION_NOTES: Patterns, edge cases, testing guidance
+  - ACCEPTANCE_CRITERIA: Checklist items for this specific task
+```
+
+**Step B — Write single-task JSON** to `/tmp/task-input-{epic_number}-{seq:02d}.json`:
+
+```json
+{
+  "epic_number": {epic_number},
+  "epic_title": "{epic_title}",
+  "epic_type": "{epic_type}",
   "output_dir": "{HLD directory}/tasks",
   "tasks": [
-    {pass through each task object from the decomposer output directly — it already contains sequence, title, category, summary, effort, labels, blocked_by, blocks, and architect_response}
+    {
+      "sequence": {sequence},
+      "title": "{title}",
+      "category": "{category}",
+      "summary": "{summary}",
+      "effort": "{effort}",
+      "labels": ["{label1}", "{label2}"],
+      "blocked_by": [{...}],
+      "blocks": [{...}],
+      "architect_response": "{architect response markdown}"
+    }
   ]
 }
 ```
 
-Write this JSON to a temporary file (e.g., `/tmp/tasks-input-{epic_number}.json`).
-
-### 5.3 Run Generation Script
-
-Execute the task file generation script:
+**Step C — Run generation script**:
 
 ```bash
-python .claude/skills/nxs-generate-tasks/scripts/generate_task_files.py /tmp/tasks-input-{epic_number}.json
+python .claude/skills/nxs-generate-tasks/scripts/generate_task_files.py /tmp/task-input-{epic_number}-{seq:02d}.json
 ```
 
-### Expected Response
+**Step D — Confirm, report, and release**: On success, log `✓ TASK-{epic_number}.{seq:02d}.md written`, then **release** the architect response and JSON blob from working memory — the content is now on disk and no longer needed. On failure, report error and stop.
 
-```json
-{
-  "status": "success",
-  "tasks_generated": N,
-  "output_dir": "path/to/tasks",
-  "files": ["TASK-7.01.md", "TASK-7.02.md", ...],
-  "fallbacks_used": N
-}
-```
+Repeat Steps A–D for every task before proceeding to Step 6. **Do not retain prior iterations' architect responses between tasks.**
 
 ### Error Handling
 
-- If `fallbacks_used > 0`, warn user: "WARNING: {N} tasks have placeholder LLD content. The decomposer should have provided `architect_response` for all tasks. Consider re-running decomposition."
-- If script returns error, report to user and stop
+- If `nxs-architect` fails for a task, set `architect_response` to `null` and continue (script uses fallbacks)
+- If the generation script returns an error, report it immediately and stop — do not continue to the next task
+- If `fallbacks_used > 0` in any response, warn the user that those tasks have placeholder LLD content
 
 ## 6. Run Consistency Analysis & Auto-Remediation
 
@@ -244,7 +275,7 @@ Context:
   - Epic directory: {epic-directory}
   - Mode: auto-remediate
 Request:
-  - Run consistency analysis on epic.md, HLD.md, and tasks/*.md
+  - Run consistency analysis on *epic.md, *hld.md, and tasks/*.md
   - Apply auto-remediation for AUTO-classified findings
   - Generate tasks/task-review.md
   - Return metrics summary
@@ -280,12 +311,26 @@ Use these metrics in the Review Checkpoint (Step 7).
 
 **MANDATORY STOP** — Wait for user confirmation before creating GitHub issues.
 
-**For fresh runs** (steps 1-6 completed):
-Present summary: {N} tasks generated in `{path}/tasks/`, auto-remediation applied ({X} tasks merged, {Y} terminology fixes), remaining issues ({critical}/{high}/{medium}/{low}), coverage ({X}%). See `task-review.md` for full analysis.
+**For fresh runs** (steps 1-6 completed), present the summary table then the severity indicator:
 
-**For resume mode** (task-review.md provided):
-Present summary: "Resuming from previous session. {N} task files found in `{path}/tasks/`."
-Parse and display metrics from `task-review.md` (remediation stats, remaining issues, coverage).
+| Metric | Value |
+|--------|-------|
+| Tasks generated | {N} |
+| Effort distribution | {count-S} × S (half–full day), {count-M} × M (1–2 days) |
+| HLD component coverage | {X}% |
+| User story coverage | {Y}% |
+| NFR coverage | {Z}% |
+| Auto-remediated | {tasks_merged} tasks merged, {terminology_fixes} terminology fixes |
+| Remaining issues | Critical: {C} · High: {H} · Medium: {M} · Low: {L} |
+
+**For resume mode** (task-review.md provided), present the equivalent table:
+
+| Metric | Value |
+|--------|-------|
+| Task files found | {N} |
+| HLD component coverage | {X}% (from task-review.md) |
+| User story coverage | {Y}% (from task-review.md) |
+| Remaining issues | Critical: {C} · High: {H} · Medium: {M} · Low: {L} |
 
 Display severity indicator:
 
@@ -373,9 +418,9 @@ Group tasks into phases based on the Task Categories defined in Step 4. Only inc
 
 ## 9. Update Epic
 
-After generating `tasks.md`, update the `epic.md` file:
+After generating `tasks.md`, update the `*epic.md` file:
 
-1. Locate or create an `## Implementation Plan` section in `epic.md` immediately after the `## Open Questions` section.
+1. Locate or create an `## Implementation Plan` section in the epic file immediately after the `## Open Questions` section.
 2. Add a relative link to the generated `tasks.md` file:
 
     ```markdown
@@ -404,8 +449,7 @@ After all GitHub issues are created, `tasks.md` is generated, and `epic.md` is u
 - **DO** check sibling epics for scope overlap before decomposing tasks
 - **DO** use `gh issue close --reason "not planned"` (not `--reason completed`) when closing superfluous epics
 - **MANDATORY STOP** at Review Checkpoint - require explicit user confirmation
+- Prefer smaller tasks over larger when uncertain
 - Ensure first task creates buildable/runnable skeleton
-- **DO NOT** invoke `nxs-architect` for LLD content — the decomposer produces `architect_response` inline
-- **DO NOT** proceed with task file generation if `architect_response` is missing from any task
 
-**Project Configuration**: On first run, if `docs/system/delivery/config.json` does not contain a `project` attribute, prompt user for GitHub project name (e.g., `org/repo`), add it to `config.json`, then proceed. On subsequent runs, use existing value. The `generate_task_files.py` script reads `project` from this config file to populate the `{{PROJECT}}` template variable.
+**Project Configuration**: On first run, if neither `docs/system/delivery/config.yml` (field: `github.project`) nor `docs/system/delivery/config.json` (field: `project`) contains a project attribute, prompt user for GitHub project name (e.g., `org/repo`), add it to the appropriate config file, then proceed. On subsequent runs, use existing value. The `generate_task_files.py` script reads `project` from this config to populate the `{{PROJECT}}` template variable. `config.yml` takes precedence over `config.json` when both exist.
