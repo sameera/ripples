@@ -23,6 +23,10 @@ Execution reality shows up as small daily changes — or the lack of them. Rippl
 - **Ripples** — short daily updates (what changed, what was intended, what blocked, confidence level)
 - **Stagnation** — days passing without meaningful movement
 
+### Reference Documents
+
+The canonical definitions of all product entities, their relationships, navigation structure, scope model, and approved terminology are documented in the **[Information Architecture](./information-architecture.md)**. All future product briefs, feature specs, and design documents must treat that document as the single source of truth. Do not re-define, rename, or re-engineer these concepts in a brief — reference the IA instead.
+
 ---
 
 ## Vision & Strategy

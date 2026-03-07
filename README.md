@@ -138,3 +138,71 @@ Feedback, issues, and contributions are very welcome.
 ## In One Sentence
 
 > **Ripples helps you see how work actually unfolds—one day at a time—before problems turn into surprises.**
+
+---
+
+## Running the Project
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) 20+
+- [pnpm](https://pnpm.io/) 10+ (`npm install -g pnpm`)
+- [Docker](https://docs.docker.com/get-docker/) (for local DynamoDB)
+
+### 1. Install dependencies
+
+```bash
+pnpm install
+```
+
+### 2. Configure environment
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and fill in your organization and Cognito values:
+
+| Variable | Required | Description |
+|---|---|---|
+| `ORG_NAME` | Yes | Your organization's display name |
+| `ORG_TIMEZONE` | No | IANA timezone (default: `UTC`) |
+| `COGNITO_USER_POOL_ID` | Yes | Your Cognito User Pool ID (e.g. `us-east-1_Abc123`) |
+| `COGNITO_CLIENT_ID` | Yes | Your Cognito App Client ID |
+
+All other defaults in `.env.example` are pre-configured for local development.
+
+### 3. Start local DynamoDB
+
+```bash
+docker compose up -d
+```
+
+### 4. Bootstrap the database
+
+Creates the `ripples` table and all indexes. Safe to re-run — skips if the table already exists.
+
+```bash
+pnpm db:bootstrap:local
+```
+
+### 5. Start the development servers
+
+```bash
+# API (http://localhost:3000)
+npx nx serve api
+
+# Web (http://localhost:4200)
+npx nx serve ripples
+```
+
+### Connecting to real AWS
+
+Set your AWS credentials (via environment variables, `~/.aws/credentials`, or an IAM role), then run:
+
+```bash
+# Remove or unset DYNAMODB_ENDPOINT in .env, then:
+pnpm db:bootstrap
+```
+
+The bootstrap script uses `AWS_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` from the environment, or falls back to the AWS credentials chain.

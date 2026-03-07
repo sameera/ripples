@@ -24,6 +24,16 @@ last_updated: 2026-01-19
 - **Utilities**: @fastify/sensible 6.0.2
 - **Build Tool**: esbuild 0.19.2 (CommonJS output)
 
+## Database
+
+- **Primary Store**: AWS DynamoDB (single-table design)
+- **Capacity Mode**: On-demand (switch to provisioned + auto-scaling when usage patterns stabilise)
+- **Backups**: Point-in-Time Recovery (PITR) enabled on production table
+- **Local Development**: DynamoDB Local (via Docker / LocalStack)
+- **Client**: `@aws-sdk/client-dynamodb` + `@aws-sdk/lib-dynamodb` (DocumentClient)
+- **ID Format**: ULID (lexicographically sortable by creation time)
+- **Schema Design**: See [ADR-001](ADRs/001-dynamodb-single-table-design.md)
+
 ## Testing
 
 - **Unit Testing**: Vitest 4.0.0 with jsdom environment
