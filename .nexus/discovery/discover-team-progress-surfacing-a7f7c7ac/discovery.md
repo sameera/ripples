@@ -28,6 +28,8 @@ integrations, and any public web presence.
 
 <!-- Append-only. One line per resolved ticket, order-insensitive. -->
 
+- **Which Microsoft Teams surfaces can a self-hosted Ripples deployment reach a team through, and what does each cost to build, host and operate?** — Ripples reaches a team only through the Bot Framework messaging endpoint it already runs, which carries channel and group-chat posts, Adaptive Cards and card button round trips; a hosted web origin is the sole remaining form of a Teams tab and is priced as a second deployable no goal may assume. Detail: `ticket-01-teams-surface-inventory.md`
+
 ## Not yet specified
 
 - What "the project" is whose progress gets surfaced. The team-level view needs a set of

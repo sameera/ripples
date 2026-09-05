@@ -1,10 +1,10 @@
 ---
 title: "Which Microsoft Teams surfaces can a self-hosted Ripples deployment reach a team through, and what does each cost to build, host and operate?"
 type: research
-status: open
+status: resolved
 blocked_by: none
-claimed_by:
-claimed_at:
+claimed_by: sameera
+claimed_at: 2026-09-05T12:58:16Z
 ---
 
 ## Question
@@ -164,3 +164,58 @@ messaging endpoint.
 - **Custom app upload policy.** Many enterprise tenants disable sideloading, forcing publication
   through the Teams admin centre — an admin action the deploying team may not control. A plausible hard
   blocker on "deploy in an afternoon"; worth confirming as a real-world frequency.
+
+### Verification pass — 2026-09-05
+
+The architect flagged nine uncertainties. This session checked the load-bearing ones against
+Microsoft's current documentation. Evidence, not a resolution.
+
+| Uncertainty | Verdict | What the check found |
+| --- | --- | --- |
+| Adaptive-Card-based tab (`tab/fetch`) GA status | **Dead** | Adaptive Card tabs are not available in the new Teams client, and Microsoft tells anyone using one to rebuild it as a web-based tab. The current tabs overview documents only static and configurable tabs, both of which are iframes of a content URL. The "tab without a web origin" row of the inventory is gone. |
+| Invoke response timeout | **Confirmed, and tighter than the lower figure cited** | Five seconds. Past it the Teams client retries twice and then shows "Unable to reach the app", and a late reply is discarded. The budget is not configurable. A Bedrock agent turn does not fit, so an acknowledgement card followed by `updateActivity` is the only workable pattern. |
+| Adaptive Card payload size | **Confirmed, two separate caps** | The card itself is capped at 28 KB. The whole bot message is capped at 40 KB, measured as UTF-16 and excluding base64 images; over that the send fails with 413. A list long enough to matter has to be paged across messages. |
+| Adaptive Card schema ceiling in Teams | **Better than assumed** | Teams supports schema v1.6 and below for bot-sent cards, on desktop and mobile. v1.6 is where `Table` lives, so a card can render a real table. v1.5 is the safer floor if Outlook or Viva ever render the same card. |
+| Azure Bot pricing and the Teams channel | **Free in practice** | The F0 tier carries 10,000 messages a month, and messages over the Teams channel are not counted against that at all. Bot cost is not a reason to prefer one surface over another. |
+| Bot registration without an Azure subscription | **Partly** | The Teams Developer Portal registers and updates the app and the bot, and the Azure portal is only needed for other Bot Framework channels such as Direct Line or Web Chat. Registering through the Azure portal still needs an Azure account, free but card-verified. Teams alone does not need the Azure portal. |
+| Custom app upload policy | **Real, and not quantified** | Uploading a custom app is governed by a Teams app setup policy that an administrator controls, and organisations do disable it. No public figure says how often. The gate is confirmed; its frequency is not, and no document will settle it. |
+
+## Resolution
+
+- **Decided:** Ripples reaches a team through the Bot Framework messaging endpoint it already
+  has to run, and through nothing else. That endpoint carries every team-facing surface worth
+  having: a proactive post into a channel or a group chat, an Adaptive Card, and the round trip
+  when someone presses a button on that card. Cards are authored against schema v1.5, with v1.6
+  `Table` used where a view genuinely needs rows, and every card is held under 28 KB with the
+  whole message under 40 KB. Any button that starts an agent turn is answered inside five
+  seconds with an acknowledgement card and updated in place when the turn finishes. A separately
+  hosted web origin — the only remaining form of a Teams tab — is priced as a second deployable
+  with its own DNS, TLS, single-sign-on exchange and release cadence, and no goal in this
+  discovery may assume one exists until a later ticket decides to pay for it. Two costs sit
+  inside the endpoint and are not free: a durable store of conversation references, without
+  which nothing can be sent proactively, and a human installing the app into the team, without
+  which the team cannot be reached at all.
+
+- **Why:** The bot registration and the one endpoint are unavoidable — AgentCore Runtime is
+  reached by a signed `InvokeAgentRuntime` call and is not publicly addressable, so a front door
+  has to exist before Ripples can hear anything at all. Once it exists, the Connector multiplexes
+  channel posts, group-chat posts, cards, card buttons, dialogs and message extensions through
+  that same endpoint as differently-named activities. Every one of those surfaces is therefore
+  incremental build on something already paid for, while a tab is a whole second system that the
+  deploying team has to host, secure and keep reachable. Against a product that assumes no
+  onboarding support, that asymmetry decides it: the conversational surfaces cost a feature each,
+  the tab costs a deployment.
+
+- **Refuted alternative:** The Adaptive-Card-based tab, which would have given a tab-shaped
+  team view rendered from cards returned to `tab/fetch`, with no web origin at all. It was the
+  cheapest route to a persistent, visitable team view and it is why the architect called its
+  status the highest-leverage fact to confirm. It lost because it no longer exists — Microsoft
+  removed Adaptive Card tabs from the new Teams client and tells anyone using one to rebuild it
+  as a hosted web tab. The middle option is gone, so the choice is genuinely binary: a message,
+  or a hosted page. Also refuted: the Workflows incoming webhook as the team-facing surface. It
+  needs no Azure subscription, no app package and no administrator, which makes it the cheapest
+  thing on the list, but it is one-way — no button reaches us, no identity comes back, no reply
+  can be read. A surfacing feature that cannot be answered is not a surface Ripples can act on,
+  so the webhook stays recorded as a fallback and is not the design.
+
+- **Resolved by:** sameera on 2026-09-05
