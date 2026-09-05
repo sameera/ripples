@@ -30,6 +30,7 @@ integrations, and any public web presence.
 
 - **Which Microsoft Teams surfaces can a self-hosted Ripples deployment reach a team through, and what does each cost to build, host and operate?** — Every team-facing surface rides the Bot Framework messaging endpoint Ripples already has to run, with a plain markdown message as the floor and cards priced but unchosen; only a URL-backed tab or dialog forces a second hosted deployable. Detail: `ticket-01-teams-surface-inventory.md`
 - **What may a team-wide view contain, when progress is self-declared and neither a person nor a team may be scored?** — The view is a point-in-time list of work items carrying the last human statement on each, its date and what the agent already did about it, with the stalled count allowed only as the length of the list beside it. Detail: `ticket-02-team-view-content.md`
+- **What may cross from a person's 1:1 check-in into a team-visible surface, and does that person see it first?** — Statements cross to the team view by default in the person's own words, previewed as the exact row inside the check-in exchange, and a withheld or backed-off statement leaves the row standing with its date and an empty statement slot. Detail: `ticket-03-individual-to-team-crossing.md`
 
 ## Not yet specified
 
@@ -59,3 +60,6 @@ integrations, and any public web presence.
   ticket. [asked: "Teams is only the first surface for this"]
 - A user interface for editing playbooks. [inferred]
 - A public marketing site. [inferred]
+- A separate preview or approval message sent outside the check-in exchange. It is a second
+  unprompted message about the same work item on the same day, which the conduct standard's
+  message budget does not allow. [inferred]
