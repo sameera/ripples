@@ -32,6 +32,7 @@ integrations, and any public web presence.
 - **What may a team-wide view contain, when progress is self-declared and neither a person nor a team may be scored?** — The view is a point-in-time list of work items carrying the last human statement on each, its date and what the agent already did about it, with the stalled count allowed only as the length of the list beside it. Detail: `ticket-02-team-view-content.md`
 - **What may cross from a person's 1:1 check-in into a team-visible surface, and does that person see it first?** — Statements cross to the team view by default in the person's own words, previewed as the exact row inside the check-in exchange, and a withheld or backed-off statement leaves the row standing with its date and an empty statement slot. Detail: `ticket-03-individual-to-team-crossing.md`
 - **When does the team-level view appear and who receives it — pushed by the agent on a trigger, or opened on demand?** — Ripples posts the view weekly into one channel the squad already reads and answers an unparameterised ask in that same channel, never delivering it to a lead on their own and never firing it on a stall or an escalation. Detail: `ticket-04-delivery-trigger-and-audience.md`
+- **What may the team-surfacing design assume of a conversational platform, so a second one can be added as an adapter?** — The floor is a proactive formatted-text message into a group destination with a reply path back, the seam carries a structured view rather than rendered text, and above-floor primitives may only render a floor-level message better. Detail: `ticket-06-channel-capability-floor.md`
 
 ## Not yet specified
 
@@ -66,3 +67,10 @@ integrations, and any public web presence.
 - A separate preview or approval message sent outside the check-in exchange. It is a second
   unprompted message about the same work item on the same day, which the conduct standard's
   message budget does not allow. [inferred]
+- A portable rich-message layout language — a format the agent emits that translates into
+  Adaptive Cards on one platform and Block Kit on another, with the agent asking an adapter what it
+  can render. Ruled out by the capability-floor resolution, which puts the domain view model on the
+  seam and gives the interface no capability query. [inferred]
+- Interactive controls on a team-facing surface — buttons, dialogs, forms, and acknowledging or
+  updating a work item from the channel the view lands in. Ruled out by the capability-floor
+  resolution. [inferred]
