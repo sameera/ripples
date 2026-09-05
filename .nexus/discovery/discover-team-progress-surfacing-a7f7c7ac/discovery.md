@@ -29,14 +29,10 @@ integrations, and any public web presence.
 <!-- Append-only. One line per resolved ticket, order-insensitive. -->
 
 - **Which Microsoft Teams surfaces can a self-hosted Ripples deployment reach a team through, and what does each cost to build, host and operate?** — Every team-facing surface rides the Bot Framework messaging endpoint Ripples already has to run, with a plain markdown message as the floor and cards priced but unchosen; only a URL-backed tab or dialog forces a second hosted deployable. Detail: `ticket-01-teams-surface-inventory.md`
+- **What may a team-wide view contain, when progress is self-declared and neither a person nor a team may be scored?** — The view is a point-in-time list of work items carrying the last human statement on each, its date and what the agent already did about it, with the stalled count allowed only as the length of the list beside it. Detail: `ticket-02-team-view-content.md`
 
 ## Not yet specified
 
-- What "the project" is whose progress gets surfaced. The team-level view needs a set of
-  work items to draw from, and Ripples has no work-tracker integration to provide one. This
-  cannot be stated as a precise question until the content ruling says whether the view is
-  a list of stalled items, which needs no boundary, or a progress summary, which does.
-  [inferred]
 - Whether a hosted page, if one is built, needs an identity and authorisation model of its
   own or can rely on the host platform's single sign-on. Nothing to state until it is known
   whether a hosted page exists. [inferred]
@@ -46,6 +42,10 @@ integrations, and any public web presence.
 
 ## Out of scope
 
+- A metrics rendering of the team-wide view — burndown, velocity, completion percentage,
+  sprint health, a red-amber-green status, or a stall count that trends week over week. Ruled
+  out by the content resolution, which allows a count only as the length of a list printed
+  with it. [inferred]
 - The individual daily check-in conversation and how its questions are generated. [inferred]
 - The internal logic of the intervention ladder, including when Ask becomes Connect and when
   Connect becomes Escalate. [inferred]
