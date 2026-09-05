@@ -18,6 +18,10 @@ message extension. For each one, record three things — what the deployer has t
 their own Microsoft tenant, what we have to build and run, and what the surface can and
 cannot display.
 
+Microsoft Teams is the first conversational platform Ripples targets, not the only one this
+product will ever run on. Price it as the first surface. What a second platform would cost,
+and what the design may assume of any platform, is a separate ticket.
+
 The stack document says AWS ships no managed Teams adapter. Because of this, we host the
 messaging endpoint ourselves, and it calls the agent runtime. Establish what that endpoint
 already gives us for free, and what each further surface adds on top of it.

@@ -36,8 +36,8 @@ integrations, and any public web presence.
   a list of stalled items, which needs no boundary, or a progress summary, which does.
   [inferred]
 - Whether a hosted page, if one is built, needs an identity and authorisation model of its
-  own or can rely on Teams single sign-on. Nothing to state until it is known whether a
-  hosted page exists. [inferred]
+  own or can rely on the host platform's single sign-on. Nothing to state until it is known
+  whether a hosted page exists. [inferred]
 - What local time a scheduled team-wide post fires at. EventBridge Scheduler runs on UTC
   cron and the handler computes local time. This is a real question, but only if the
   delivery ruling picks a scheduled push. [inferred]
@@ -51,6 +51,9 @@ integrations, and any public web presence.
   a decision of its own. [inferred]
 - Work-tracker integrations with Jira, Linear or GitHub Issues as sources for the team-level
   view. [inferred]
-- Any channel other than Microsoft Teams. [asked: "which interactions are purely conversational over Microsoft Teams"]
+- Building a second conversational platform. Microsoft Teams is the first surface and the
+  only one this discovery prices. What is not out of scope is portability: every ruling here
+  must leave a second platform addable as an adapter rather than a redesign, which is its own
+  ticket. [asked: "Teams is only the first surface for this"]
 - A user interface for editing playbooks. [inferred]
 - A public marketing site. [inferred]
