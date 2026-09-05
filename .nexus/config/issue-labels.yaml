@@ -1,0 +1,66 @@
+# Domain labels for Ripples story issues.
+#
+# Selected per story by /nxs.epic — applicable ones only, never all of them.
+# Classification labels (`epic`, `backlog`) are resolved by `nexus config resolve`
+# and are NOT listed here.
+#
+# Reflects the v2 shape: an AWS Strands Agents agent on Bedrock, hosted on Bedrock
+# AgentCore Runtime (see docs/system/stack.md). Add labels as real work areas appear;
+# do not pre-create labels for capabilities that don't exist.
+
+labels:
+    - name: agent
+      color: "5319e7"
+      description: Agent instructions, skills, subagents, and model configuration
+
+    - name: tools
+      color: "1d76db"
+      description: Typed Strands tools and AgentCore Gateway targets
+
+    - name: channels
+      color: "0075ca"
+      description: Channel adapters — Microsoft Teams, and the /invocations entry point
+
+    - name: schedules
+      color: "fbca04"
+      description: EventBridge schedules and the daily check-in loop
+
+    - name: playbooks
+      color: "c2e0c6"
+      description: Team-editable rules that decide when the agent acts and how far it goes
+
+    - name: interventions
+      color: "d93f0b"
+      description: The Notice/Ask/Assist/Connect/Escalate ladder and its outcomes
+
+    - name: memory
+      color: "8b5cf6"
+      description: AgentCore Memory — session identity, short- and long-term strategies, retrieval
+
+    - name: record
+      color: "006b75"
+      description: The execution record — work items, ripples, signals, outcomes; schema and persistence
+
+    - name: integrations
+      color: "e99695"
+      description: Work-tracker and third-party connections — Jira, Linear, GitHub Issues
+
+    - name: conduct
+      color: "b60205"
+      description: Consent, visibility, back-off, escalation notice, explainability — see docs/system/standards/agent-conduct.md
+
+    - name: infrastructure
+      color: "0e8a16"
+      description: AgentCore Runtime, container build and ECR, IAM, environment config, CI
+
+    - name: observability
+      color: "d4c5f9"
+      description: AgentCore Observability, CloudWatch, tracing, evals, token and cost visibility
+
+    - name: testing
+      color: "bfd4f2"
+      description: Unit, integration, and agent-behavior tests
+
+    - name: docs
+      color: "cfd3d7"
+      description: Documentation and standards
