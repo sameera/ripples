@@ -31,18 +31,21 @@ integrations, and any public web presence.
 - **Which Microsoft Teams surfaces can a self-hosted Ripples deployment reach a team through, and what does each cost to build, host and operate?** — Every team-facing surface rides the Bot Framework messaging endpoint Ripples already has to run, with a plain markdown message as the floor and cards priced but unchosen; only a URL-backed tab or dialog forces a second hosted deployable. Detail: `ticket-01-teams-surface-inventory.md`
 - **What may a team-wide view contain, when progress is self-declared and neither a person nor a team may be scored?** — The view is a point-in-time list of work items carrying the last human statement on each, its date and what the agent already did about it, with the stalled count allowed only as the length of the list beside it. Detail: `ticket-02-team-view-content.md`
 - **What may cross from a person's 1:1 check-in into a team-visible surface, and does that person see it first?** — Statements cross to the team view by default in the person's own words, previewed as the exact row inside the check-in exchange, and a withheld or backed-off statement leaves the row standing with its date and an empty statement slot. Detail: `ticket-03-individual-to-team-crossing.md`
+- **When does the team-level view appear and who receives it — pushed by the agent on a trigger, or opened on demand?** — Ripples posts the view weekly into one channel the squad already reads and answers an unparameterised ask in that same channel, never delivering it to a lead on their own and never firing it on a stall or an escalation. Detail: `ticket-04-delivery-trigger-and-audience.md`
 
 ## Not yet specified
 
 - Whether a hosted page, if one is built, needs an identity and authorisation model of its
   own or can rely on the host platform's single sign-on. Nothing to state until it is known
   whether a hosted page exists. [inferred]
-- What local time a scheduled team-wide post fires at. EventBridge Scheduler runs on UTC
-  cron and the handler computes local time. This is a real question, but only if the
-  delivery ruling picks a scheduled push. [inferred]
 
 ## Out of scope
 
+- Delivering the team-wide view to a lead alone — a direct message, a lead-only channel,
+  or a variant of the view shaped for them. Ruled out by the delivery resolution, which makes
+  the lead read it from the squad's channel instead of receiving it separately. [inferred]
+- A team-wide post triggered by a stall crossing a playbook threshold, or by an escalation. Ruled out
+  by the delivery resolution. [inferred]
 - A metrics rendering of the team-wide view — burndown, velocity, completion percentage,
   sprint health, a red-amber-green status, or a stall count that trends week over week. Ruled
   out by the content resolution, which allows a count only as the length of a list printed
