@@ -180,42 +180,63 @@ Microsoft's current documentation. Evidence, not a resolution.
 | Bot registration without an Azure subscription | **Partly** | The Teams Developer Portal registers and updates the app and the bot, and the Azure portal is only needed for other Bot Framework channels such as Direct Line or Web Chat. Registering through the Azure portal still needs an Azure account, free but card-verified. Teams alone does not need the Azure portal. |
 | Custom app upload policy | **Real, and not quantified** | Uploading a custom app is governed by a Teams app setup policy that an administrator controls, and organisations do disable it. No public figure says how often. The gate is confirmed; its frequency is not, and no document will settle it. |
 
+### Later evidence — 2026-09-05
+
+Two facts arrived after the verification pass and belong on the record.
+
+**A bot can post without a card.** A bot message carries `textFormat: "markdown"`, which renders
+bold, italic, lists and links. Cards are not required for formatted text. What text-only messages
+cannot do is tables. Cards buy layout, tables and buttons, and nothing else.
+
+**`strands-teams` is not a channel adapter.** The Strands integration catalogue lists a
+`strands-teams` package. It is outbound-only, delivers through an incoming webhook, handles no
+inbound message and no button callback, and is community-maintained with an explicit note that
+the Strands team neither owns nor supports it. Its documented setup also points at O365
+connectors, which Microsoft retired. It is an implementation of the webhook row already in this
+inventory, not a way around the messaging endpoint. `docs/system/stack.md` remains accurate: no
+managed channel adapter exists.
+
+### Scope correction — 2026-09-05
+
+This ticket's question told the researcher to price "an Adaptive Card and the round trip when
+someone presses a button on it". Nobody asked for buttons. The question carries the label
+`[asked: "which interactions are purely conversational over Microsoft Teams"]`, and that single
+fragment was stretched over an enumeration the lead never gave. Cards and buttons entered this
+discovery as an inference wearing the label of a request. They are priced below because pricing
+them was useful. They are not chosen here.
+
 ## Resolution
 
-- **Decided:** Ripples reaches a team through the Bot Framework messaging endpoint it already
-  has to run, and through nothing else. That endpoint carries every team-facing surface worth
-  having: a proactive post into a channel or a group chat, an Adaptive Card, and the round trip
-  when someone presses a button on that card. Cards are authored against schema v1.5, with v1.6
-  `Table` used where a view genuinely needs rows, and every card is held under 28 KB with the
-  whole message under 40 KB. Any button that starts an agent turn is answered inside five
-  seconds with an acknowledgement card and updated in place when the turn finishes. A separately
-  hosted web origin — the only remaining form of a Teams tab — is priced as a second deployable
-  with its own DNS, TLS, single-sign-on exchange and release cadence, and no goal in this
-  discovery may assume one exists until a later ticket decides to pay for it. Two costs sit
-  inside the endpoint and are not free: a durable store of conversation references, without
-  which nothing can be sent proactively, and a human installing the app into the team, without
-  which the team cannot be reached at all.
+- **Decided:** Ripples reaches a team through the Bot Framework messaging endpoint it already has
+  to run, and that endpoint carries every team-facing surface worth having — proactive posts into
+  a channel or a group chat, ordinary markdown messages, Adaptive Cards, card button round trips,
+  card dialogs and message extensions. The floor is a plain markdown bot message: it needs no
+  card, and it is the one form every chat platform renders. Cards and everything above them are
+  priced and available on the same endpoint at no extra hosting; whether any team-facing surface
+  spends one is ticket 06's ruling and ticket 05's, not this ticket's. Only two things force a
+  second deployable, and both are hosted web origins: a Teams tab whose content is a URL, and a
+  URL-based dialog. Two costs sit inside the endpoint and are not free — a durable store of
+  conversation references, without which nothing can be sent proactively, and a human installing
+  the app into the team, without which the team cannot be reached at all.
 
-- **Why:** The bot registration and the one endpoint are unavoidable — AgentCore Runtime is
-  reached by a signed `InvokeAgentRuntime` call and is not publicly addressable, so a front door
-  has to exist before Ripples can hear anything at all. Once it exists, the Connector multiplexes
-  channel posts, group-chat posts, cards, card buttons, dialogs and message extensions through
-  that same endpoint as differently-named activities. Every one of those surfaces is therefore
-  incremental build on something already paid for, while a tab is a whole second system that the
-  deploying team has to host, secure and keep reachable. Against a product that assumes no
-  onboarding support, that asymmetry decides it: the conversational surfaces cost a feature each,
-  the tab costs a deployment.
+- **Why:** The bot registration and the one endpoint are unavoidable. AgentCore Runtime is reached
+  by a signed `InvokeAgentRuntime` call and is not publicly addressable, so a front door has to
+  exist before Ripples can hear anything. Once it exists, the Connector multiplexes channel posts,
+  group-chat posts, messages, cards, dialogs and message extensions through that same endpoint as
+  differently-named activities. Every one of those is incremental build on something already paid
+  for, while a tab is a whole second system the deploying team has to host, secure and keep
+  reachable. Against a product that assumes no onboarding support, that asymmetry is the finding:
+  the conversational surfaces cost a feature each, the hosted page costs a deployment.
 
-- **Refuted alternative:** The Adaptive-Card-based tab, which would have given a tab-shaped
-  team view rendered from cards returned to `tab/fetch`, with no web origin at all. It was the
-  cheapest route to a persistent, visitable team view and it is why the architect called its
-  status the highest-leverage fact to confirm. It lost because it no longer exists — Microsoft
-  removed Adaptive Card tabs from the new Teams client and tells anyone using one to rebuild it
-  as a hosted web tab. The middle option is gone, so the choice is genuinely binary: a message,
-  or a hosted page. Also refuted: the Workflows incoming webhook as the team-facing surface. It
-  needs no Azure subscription, no app package and no administrator, which makes it the cheapest
-  thing on the list, but it is one-way — no button reaches us, no identity comes back, no reply
-  can be read. A surfacing feature that cannot be answered is not a surface Ripples can act on,
-  so the webhook stays recorded as a fallback and is not the design.
+- **Refuted alternative:** The Adaptive-Card-based tab, which would have given a tab-shaped team
+  view rendered from cards returned to `tab/fetch`, with no web origin at all. It was the cheapest
+  route to a persistent, visitable team view, and the architect called its status the
+  highest-leverage fact to confirm. It lost because it no longer exists — Microsoft removed
+  Adaptive Card tabs from the new Teams client and tells anyone using one to rebuild it as a
+  hosted web tab. The middle option is gone, so a team view is either a message or a hosted page.
+
+- **Not refuted, and left open:** the Workflows incoming webhook. It cannot carry the 1:1 check-in,
+  which has to be answerable. Whether it can carry a one-way team-wide post is a live question,
+  and it is ticket 07's, not this ticket's.
 
 - **Resolved by:** sameera on 2026-09-05
