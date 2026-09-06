@@ -34,6 +34,8 @@ integrations, and any public web presence.
 - **When does the team-level view appear and who receives it — pushed by the agent on a trigger, or opened on demand?** — Ripples posts the view weekly into one channel the squad already reads and answers an unparameterised ask in that same channel, never delivering it to a lead on their own and never firing it on a stall or an escalation. Detail: `ticket-04-delivery-trigger-and-audience.md`
 - **What may the team-surfacing design assume of a conversational platform, so a second one can be added as an adapter?** — The floor is a proactive formatted-text message into a group destination with a reply path back, the seam carries a structured view rather than rendered text, and above-floor primitives may only render a floor-level message better. Detail: `ticket-06-channel-capability-floor.md`
 
+- **Must team-wide surfacing assume the app can be installed into the team, or must it degrade when the tenant forbids custom app upload?** — Ripples requires the install and refuses the webhook, and the degradation it builds instead is the unconfigured state, where check-ins run, nothing posts, and the preview turn says so every time it is shown. Detail: `ticket-07-install-gate.md`
+
 ## Not yet specified
 
 - Whether a hosted page, if one is built, needs an identity and authorisation model of its
@@ -42,6 +44,17 @@ integrations, and any public web presence.
 
 ## Out of scope
 
+- A Power Automate Workflows incoming webhook as a delivery path for the team-wide view,
+  whether as a declared lesser mode for a tenant that forbids the app or as an extra
+  destination for a team that already has a working bot. Ruled out by the install-gate
+  resolution. [inferred]
+- Serving a tenant that forbids custom app upload through any second delivery mode. The
+  documented path is asking that tenant's administrator to publish the app, which ticket 01
+  established remains open to them. [inferred]
+- Operating the deployment's Entra client credential — choosing a certificate over a client
+  secret, and alarming before it expires. Requiring the install makes the 1:1 and team
+  surfacing lapse together and silently when it does, which makes it real work, but it is
+  deployment operations rather than surfacing. [inferred]
 - Delivering the team-wide view to a lead alone — a direct message, a lead-only channel,
   or a variant of the view shaped for them. Ruled out by the delivery resolution, which makes
   the lead read it from the squad's channel instead of receiving it separately. [inferred]
