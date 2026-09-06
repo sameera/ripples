@@ -1,6 +1,7 @@
 ---
 title: "What may the team-surfacing design assume of a conversational platform, so a second one can be added as an adapter?"
 type: council
+surface: "team channel post"
 status: resolved
 blocked_by: [ticket-01-teams-surface-inventory.md]
 claimed_by: sameera
@@ -201,6 +202,24 @@ statement. The webhook would faithfully deliver a view in which every row reads 
     model. If delivery were reachable only through a tool, the scheduled post would be forced
     through a model turn that ticket 04 forbids.
 
+
+    ```text
+    Agent emits fields. Each adapter renders them. No controls.
+
+      plain-text adapter              adapter that can draw a table
+    +-----------------------------+ +------------------------------+
+    | * <work item> - <link>      | | +---------+----------------+ |
+    |   "<statement, verbatim>"   | | | <item>  | "<statement>"  | |
+    |   <owner> . <date>          | | | <owner> | <date>         | |
+    |   <what Ripples did>        | | +---------+----------------+ |
+    |                             | |                              |
+    | [ more rows, same shape ]   | | [ more rows, same shape ]    |
+    +-----------------------------+ +------------------------------+
+
+    Same fields both sides. Richer rendering is the adapter's
+    choice and the agent never learns it was made.
+    ```
+
 - **Why:** The floor is free, and that is the whole case for taking it now. Ticket 02 banned scores,
   trends, percentages, colour, red-amber-green, sorting, grouping, filtering, paging and history,
   and ticket 04 made the scheduled post a deterministic assembly with no model turn. Cards buy
@@ -270,6 +289,13 @@ statement. The webhook would faithfully deliver a view in which every row reads 
   mangles a person's words on every other platform or forces a transpiler that has to round-trip
   escaping correctly. Ticket 03 made those exact words load-bearing, so corrupting them is not a
   rendering bug.
+
+- **Third refuted alternative:** One rendering, byte-identical on every platform, with no
+  adapter allowed to draw a table even where the platform can. It is the simplest thing to
+  reason about and to test, and it removes any argument about what counts as enrichment. It
+  lost because it forbids something that costs nothing: a table carries the same fields, adds
+  no interaction, and stays invisible above the seam, so banning it buys uniformity the reader
+  never sees and gives up the one readability gain available on a long list.
 
 - **Left open, and not this ticket's:** `runtimeSessionId` must carry the platform in its derivation
   before the first session exists. The runtime standard fixes the derivation as the conversation

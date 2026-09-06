@@ -1,6 +1,7 @@
 ---
 title: "Which team-facing surfaces need a rendered UI we build and host, and which are messages a chat platform can carry?"
 type: council
+surface: "hosted page or chat message"
 status: open
 blocked_by: [ticket-01-teams-surface-inventory.md, ticket-02-team-view-content.md, ticket-03-individual-to-team-crossing.md, ticket-04-delivery-trigger-and-audience.md, ticket-06-channel-capability-floor.md, ticket-07-install-gate.md, ticket-08-team-view-item-set.md]
 claimed_by:

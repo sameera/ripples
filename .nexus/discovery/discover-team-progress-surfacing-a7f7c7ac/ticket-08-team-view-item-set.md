@@ -1,6 +1,7 @@
 ---
 title: "Which work items does the team-wide view list, when nothing outside Ripples enumerates a project?"
 type: council
+surface: "team channel post"
 status: open
 blocked_by: none
 claimed_by:
