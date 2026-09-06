@@ -36,6 +36,8 @@ integrations, and any public web presence.
 
 - **Must team-wide surfacing assume the app can be installed into the team, or must it degrade when the tenant forbids custom app upload?** — Ripples requires the install and refuses the webhook, and the degradation it builds instead is the unconfigured state, where check-ins run, nothing posts, and the preview turn says so every time it is shown. Detail: `ticket-07-install-gate.md`
 
+- **Which work items does the team-wide view list, when nothing outside Ripples enumerates a project?** — The view lists a roster the team declares and maintains through typed messages in the channel the view lands in; a check-in never adds or removes an item, silence never removes one, and the roster is bounded when an item is added rather than truncated when the view is rendered. Detail: `ticket-08-team-view-item-set.md`
+
 ## Not yet specified
 
 - Whether a hosted page, if one is built, needs an identity and authorisation model of its
@@ -84,6 +86,21 @@ integrations, and any public web presence.
   Adaptive Cards on one platform and Block Kit on another, with the agent asking an adapter what it
   can render. Ruled out by the capability-floor resolution, which puts the domain view model on the
   seam and gives the interface no capability query. [inferred]
-- Interactive controls on a team-facing surface — buttons, dialogs, forms, and acknowledging or
-  updating a work item from the channel the view lands in. Ruled out by the capability-floor
-  resolution. [inferred]
+- Interactive controls on a team-facing surface — buttons, dialogs, forms, and acknowledging a
+  work item or changing what its row says from the channel the view lands in. Ruled out by the
+  capability-floor resolution. Adding or removing a roster item is not covered by this: it is
+  typed text, which is clause 3 of the floor, and it changes which items the view lists rather
+  than what any row says. [inferred]
+- An item set that emerges from what people mention in their 1:1 check-ins, joining when its
+  owner names it and dropping after unanswered asks. Ruled out by the roster resolution.
+  [inferred]
+- Dropping an item from the team view because nobody has spoken about it — an age-out, a
+  dormancy threshold, or any timer that changes an item's membership. Ruled out by the roster
+  resolution, which lets only a person remove an item. [inferred]
+- Truncating or paging the team view at render, and the line that would tell a reader rows
+  were cut. The roster is bounded when an item is added instead. [inferred]
+- Matching two similarly named work items to each other — a pasted-URL identity key, a
+  model-proposed match a human confirms, or a merge that joins two rows into one. A human
+  names each roster item once, so nothing in the system needs to match anything. [inferred]
+- A page or a form for editing the roster. Ruled out by the roster resolution, which puts
+  roster maintenance on the channel's inbound text path. [inferred]
