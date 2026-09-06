@@ -43,6 +43,8 @@ integrations, and any public web presence.
 - **Which GitHub project and iteration is a team's, who names it, and with what authority?** — The board is a playbook value beside the cadence, resolved by one deployment-scoped read-only GitHub App and announced into the claimed channel on every load; the current sprint is derived and never stored, a project with no iteration field is refused rather than widened to its backlog, and a team with no board runs nothing at all. Detail: `ticket-12-which-board.md`
 
 
+- **How does Ripples know which person a sprint item's assignee is?** — The operator maps each GitHub login to a work email in the team's playbook and Ripples resolves it against the Teams roster, but nothing is used against anyone until that person has been told in their own 1:1 which login they were matched to, with a refusal that works. Detail: `ticket-11-assignee-to-person.md`
+
 ## Not yet specified
 
 - Whether a hosted page, if one is built, needs an identity and authorisation model of its
@@ -50,6 +52,19 @@ integrations, and any public web presence.
   whether a hosted page exists. [inferred]
 
 ## Out of scope
+
+- Matching a GitHub login to a person by email address, and any permission bought to make that
+  match possible. A read-only credential cannot see a user's GitHub email, and a join that looks
+  exact but is wrong is silent. Ruled out by the assignee resolution, which keeps email as a value
+  a human authors rather than a value two platforms are matched on. [inferred]
+- Reading the Microsoft tenant directory to resolve a person. It holds no GitHub login, and the
+  team roster already maps an address to a person on the credential the messaging endpoint holds.
+  [inferred]
+- A person index that spans teams — one record joining somebody's rows on two boards. Ruled out by
+  the assignee resolution: two playbooks hold two entries and Ripples never joins them. [inferred]
+- Holding a person's GitHub login in AgentCore Memory. A memory record is the agent's recollection
+  rather than a stated fact, which the conduct standard already refuses to let stand in for a
+  declared answer. [inferred]
 
 - Restricting who may name a team's board, or who may claim and move a post destination, to a
   team lead. Ruled out by the board resolution, which makes the board a change to the deployment
