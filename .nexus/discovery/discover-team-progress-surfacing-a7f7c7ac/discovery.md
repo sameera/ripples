@@ -36,7 +36,7 @@ integrations, and any public web presence.
 
 - **Must team-wide surfacing assume the app can be installed into the team, or must it degrade when the tenant forbids custom app upload?** — Ripples requires the install and refuses the webhook, and the degradation it builds instead is the unconfigured state, where check-ins run, nothing posts, and the preview turn says so every time it is shown. Detail: `ticket-07-install-gate.md`
 
-- **Which work items does the team-wide view list, when nothing outside Ripples enumerates a project?** — The view lists a roster the team declares and maintains through typed messages in the channel the view lands in; a check-in never adds or removes an item, silence never removes one, and the roster is bounded when an item is added rather than truncated when the view is rendered. Detail: `ticket-08-team-view-item-set.md`
+- **Which work items does the team-wide view list?** — The view lists a team's GitHub project at its current sprint, every item in it a row whether or not anyone is assigned; Ripples reads the board and never writes to it, so a check-in still changes nothing and silence still removes nothing. Detail: `ticket-08-team-view-item-set.md`
 
 - **Which channel does a team's scheduled post land in, at what local hour, and who decides both?** — A channel becomes that team's destination when someone first mentions Ripples in it; the install event buys only a one-off welcome message, nobody is asked for the hour, and the post defaults to Monday late in the day from playbook values. Detail: `ticket-09-post-address-and-local-time.md`
 
@@ -73,8 +73,24 @@ integrations, and any public web presence.
   Connect becomes Escalate. [inferred]
 - The persistence choice for the execution record. It is open in the stack document and is
   a decision of its own. [inferred]
-- Work-tracker integrations with Jira, Linear or GitHub Issues as sources for the team-level
-  view. [inferred]
+- Work-tracker integrations with Jira or Linear as sources for the team-level view. GitHub is no
+  longer among them: the lead states that a team's item set is a GitHub project, at each person's
+  assigned sprint tasks, so reading one is the item-set resolution rather than an integration
+  ruled beyond the destination. [asked: "each person's assigned sprint tasks"]
+- Writing anything back to the GitHub project — a comment carrying a declared blocker, an
+  assignee change, a status move, a close. The sync is read-only, and this is recorded as
+  deferred rather than dismissed: it is the agent acting on a person's behalf somewhere their
+  whole company reads, which needs a consent rule of its own on top of ticket 03's. [inferred]
+- Maintaining the item set through typed messages to Ripples — an add sentence, a drop sentence,
+  and the exchange that answers them. Ruled out by the item-set resolution, which puts the set on
+  a board Ripples only reads. [inferred]
+- A ceiling on how many items the team view may list, and the refusal that would name what has to
+  come off first. A sprint is bounded by the team that planned it. [inferred]
+- Keeping the team view's item set current — an age-out, a nudge to remove finished items, or a
+  line in the post naming items nobody has spoken about for a long time. A board is kept current
+  because the team plans and works off it. What is not covered by this: whether Ripples says
+  anything when a person's statement is about work that is not in the sprint, which is a ticket
+  of its own. [inferred]
 - Building a second conversational platform. Microsoft Teams is the first surface and the
   only one this discovery prices. What is not out of scope is portability: every ruling here
   must leave a second platform addable as an adapter rather than a redesign, which is its own
@@ -94,18 +110,19 @@ integrations, and any public web presence.
   typed text, which is clause 3 of the floor, and it changes which items the view lists rather
   than what any row says. [inferred]
 - An item set that emerges from what people mention in their 1:1 check-ins, joining when its
-  owner names it and dropping after unanswered asks. Ruled out by the roster resolution.
+  owner names it and dropping after unanswered asks. Ruled out by the item-set resolution.
   [inferred]
 - Dropping an item from the team view because nobody has spoken about it — an age-out, a
-  dormancy threshold, or any timer that changes an item's membership. Ruled out by the roster
-  resolution, which lets only a person remove an item. [inferred]
+  dormancy threshold, or any timer that changes an item's membership. Ruled out by the item-set
+  resolution, which makes membership the board's and nothing else's. [inferred]
 - Truncating or paging the team view at render, and the line that would tell a reader rows
-  were cut. The roster is bounded when an item is added instead. [inferred]
+  were cut. The sprint bounds the view instead. [inferred]
 - Matching two similarly named work items to each other — a pasted-URL identity key, a
-  model-proposed match a human confirms, or a merge that joins two rows into one. A human
-  names each roster item once, so nothing in the system needs to match anything. [inferred]
-- A page or a form for editing the roster. Ruled out by the roster resolution, which puts
-  roster maintenance on the channel's inbound text path. [inferred]
+  model-proposed match a human confirms, or a merge that joins two rows into one. An item is a
+  GitHub issue with a number and a URL, so nothing in the system needs to match anything.
+  [inferred]
+- A page or a form for editing the team view's item set. Ruled out by the item-set resolution,
+  which leaves the set on the GitHub board the team already edits. [inferred]
 - An install-time configuration question for team surfacing — a channel picker, a setup
   exchange, or any pending-setup state between installing the app and the first post. Ruled
   out by the destination resolution. [inferred]

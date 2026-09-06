@@ -1,11 +1,11 @@
 ---
-title: "Which work items does the team-wide view list, when nothing outside Ripples enumerates a project?"
+title: "Which work items does the team-wide view list?"
 type: council
 surface: "team channel post"
 status: resolved
 blocked_by: none
 claimed_by: sameera
-claimed_at: 2026-09-06T03:05:00Z
+claimed_at: 2026-09-06T04:20:00Z
 ---
 
 ## Question
@@ -23,6 +23,15 @@ leave the set, or does it stay in the set as unknown?
 The set carries a size constraint that is part of the same decision. Ten to thirty rows fit
 inside a chat message. A set that outgrows a message needs paging. Paging is one of the
 things that forces a hosted page, which ticket 01 priced as the expensive path.
+
+## Corrected premise — 2026-09-06
+
+The question was first written as "which work items does the team-wide view list, when nothing
+outside Ripples enumerates a project". Nothing in the repository contradicted that clause, and
+no resolved ticket had established an enumerator, so the question was drafted around its
+absence. The lead has since stated that one exists: a team's items are a GitHub project, the set
+is each person's assigned sprint tasks, and the team lead maintains it. The title has been cut
+back to the question itself and the trailing clause removed.
 
 ## Why it blocks
 
@@ -75,7 +84,15 @@ ticket 04's deterministic assembly requires. The person-to-items traversal is lo
 either way: the check-in composer walks it daily. The invariant that protects it belongs in
 `agent-conduct.md` before the traversal ships.
 
-## Resolution
+## Superseded resolution — recorded 2026-09-05, superseded 2026-09-06
+
+This ticket asked which work items the view lists **when nothing outside Ripples enumerates a
+project**. That premise was wrong. The lead states that a team's item set is a GitHub project —
+each person's assigned sprint tasks — and that the team lead maintains it. The ruling below was
+made against a condition that does not hold, so it is superseded in full by the resolution that
+follows it. It is kept because two later tickets were decided on top of it and a reader needs to
+see what they were reading.
+
 
 - **Decided:** The team-wide view lists a roster the team declares and maintains. There is one
   roster per team destination, and it is the only source of the set.
@@ -166,3 +183,131 @@ either way: the check-in composer walks it daily. The invariant that protects it
   because the roster exists to be kept current.
 
 - **Resolved by:** sameera on 2026-09-05
+
+## Resolution
+
+- **Decided:** The team-wide view lists a team's GitHub project, at its current sprint. Every
+  item in that sprint is a row, whether or not anyone is assigned to it. Ripples reads the board
+  and never writes to it.
+
+    ```text
+    Weekly post, #squad-delivery - synced from the sprint board
+
+      Ripples  Sprint 24 board, 9 items.
+               9 listed of 9 in the sprint.
+
+                 auth refactor - #412
+                 "waiting on the security review"
+                 Sam . 2 Sep
+
+                 onboarding copy - #418
+                 Dana . no statement, asked twice
+
+                 search reindex - #421
+                 no assignee . nobody has been asked
+
+                 <6 more rows>
+
+    Every sprint item is a row. An item with no assignee has
+    nobody to raise it with, so it prints as a row Ripples has
+    never asked anyone about, and says so in place of a date.
+
+    The two counts stay equal, which is how a reader knows the
+    list held nothing back.
+    ```
+
+  **The set is the board's, and Ripples does not maintain it.** An item enters the view when it
+  enters the sprint and leaves when it leaves the sprint. Nobody types an item into Ripples,
+  nobody types one out, and no message to Ripples on any surface changes which items the view
+  lists. The team lead changes the set by changing the board, in GitHub, where they already
+  work.
+
+  **A check-in still never changes the set.** A statement made in a 1:1 attaches to a sprint item
+  and fills that item's statement slot under ticket 03's rules. A statement about work that is
+  not in the sprint is recorded and used in that person's own conversation, and never reaches
+  the team view. This clause survives the premise change unaltered, and it now costs nothing to
+  hold, because there is no path by which a conversation could edit a board Ripples only reads.
+
+  **Silence still never removes a row.** An item nobody has spoken about stays in the view and
+  renders as unknown, with no date, for as long as it is in the sprint. Ticket 02's unknown row
+  is unchanged.
+
+  **An unassigned item is a row with an empty owner slot.** It carries the item and its number,
+  no owner, no statement, and, in place of a date, the fact that nobody has been asked. This is
+  one stated exception to ticket 04's rule that no row appears about a work item the agent has
+  not already raised with its owner. The rule exists so the post is never the first notice of a
+  problem to the person who owns it; an item with no assignee has no such person, so the rule
+  protects nobody and blocks the row for no one's benefit. Sprint work nobody has picked up is
+  frequently the work most likely to be in trouble, and it is the one class of item the 1:1
+  loop cannot reach at all.
+
+  **Both of ticket 02's counts are read from the board, and they are equal.** The count of items
+  listed and the count of items in the sprint are the same number, because every sprint item is
+  printed. Their being equal is how a reader knows nothing was held back.
+
+  **The identity problem is gone rather than solved.** An item is a GitHub issue, so it has a
+  number, a title and a URL that the platform already guarantees are unique. Two people
+  describing one job cannot produce two rows, no similarity matching is needed anywhere, and
+  ticket 02's requirement that a row carry a link to its work item is satisfied by the issue URL
+  without anything being authored.
+
+  **The size ceiling is gone with it.** A sprint is bounded by the team that planned it, so the
+  view is bounded by an act that already happens. There is no ceiling to configure, no refusal
+  to write, and still no truncation and no paging at render.
+
+  **The sync is read-only, and write-back is deferred deliberately.** Ripples posts no comment,
+  moves no status, changes no assignee and closes no issue. What a person declares lives in
+  Ripples' own record and reaches the team through the weekly post. Writing a declared blocker
+  back to the issue is a real option and is recorded as out of scope rather than dismissed: it
+  is the agent acting on a person's behalf somewhere their whole company reads, which needs a
+  consent rule of its own on top of ticket 03's.
+
+- **Why:** The board is maintained because the team works off it, which is the forcing function
+  a declared roster never had. Sprint planning already decides what the team is working on, so
+  reading that decision costs the team nothing and asks them to keep no second list in step with
+  the first. The superseded ruling had to invent a maintenance path, an identity rule, a size
+  ceiling and a currency mechanism, and every one of those is a consequence of Ripples holding
+  its own copy of a set the team already holds elsewhere.
+
+  Reading rather than writing is what keeps that cheap. A read-only sync has one failure mode —
+  the read fails and the view is stale or absent — and it can never damage the artifact the team
+  plans against. It also keeps the conduct rule that the agent never acts on someone's behalf
+  true by construction rather than by a policy someone has to enforce at each write site.
+
+  Listing every sprint item rather than only the ones Ripples has asked about is what keeps the
+  two counts honest. Ticket 02 put both counts above the list, and ticket 08's superseded ruling
+  had already established that their being equal is the reader's proof that nothing was held
+  back. A view that silently omits unassigned work teaches a reader that the list is a subset
+  and gives them no way to know how large a subset, which is worse than a row saying plainly
+  that nobody has been asked.
+
+- **Refuted alternative:** Keep unassigned sprint items out of the list and name them on one
+  line beside it, in the slot that already holds recurring blockers and items waiting on someone
+  outside the team. It is the tidier option and it leaves ticket 04's raised-first rule standing
+  with no exception at all, which is worth something — an exception written once tends to be
+  cited later for cases it was not argued for. It lost because it makes the two counts differ as
+  a matter of routine, and once a reader learns the list is a subset they have to read the counts
+  to know what is missing every week, which is a cost paid on every post to avoid writing one
+  exception down once.
+
+- **Second refuted alternative:** Show unassigned items only as the gap between the two counts,
+  naming none of them. It is the strictest reading of ticket 04 and the quietest post. It lost
+  outright: it inverts what ticket 02 built the counts for, turning the proof that nothing was
+  held back into the notice that something was, and it sends a reader to the board to find out
+  what — which is the tool-switch the weekly post exists to remove.
+
+- **What the premise change costs elsewhere:** ticket 09's claiming act was the first roster-add
+  typed in the channel, and there is no such act any more. Its ruling that the first mention
+  claims the channel stands; the sentence that does the claiming has to be something else, and
+  that is recorded as an amendment on ticket 09. Ticket 09's reasoning that no team can hold a
+  roster without a destination is also gone: a board exists before anyone mentions Ripples
+  anywhere.
+
+- **Left open, and not this ticket's:** which GitHub project and which iteration are a given
+  team's, who names them, and what authority that takes now that the lead alone maintains the
+  set. Also how Ripples knows which person a GitHub assignee is, so it can ask them in their
+  1:1 — the board names a GitHub login and the check-in reaches a Teams user, and nothing
+  connects the two. Also what the weekly post shows when the board cannot be read. All three are
+  precisely statable now and each has its own ticket.
+
+- **Resolved by:** sameera on 2026-09-06

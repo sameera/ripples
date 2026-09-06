@@ -292,3 +292,33 @@ destination needs an authorization rule.
   a decision.
 
 - **Resolved by:** sameera on 2026-09-06
+
+## Amendment — 2026-09-06
+
+Ticket 08 was reopened and re-resolved after the lead corrected its premise: a team's item set is
+a GitHub project's current sprint, read by Ripples and maintained by the team lead on the board.
+Two parts of this ruling were written against the superseded set and need restating. Everything
+else here stands.
+
+**The claiming act is no longer a roster add.** This ruling made a channel the team's destination
+on the first mention of Ripples in it, and used `@Ripples track "auth refactor" - Sam` as the
+sentence that does it, because ticket 08 required that act anyway. There is no such act now —
+nobody types an item into Ripples. The ruling itself is unchanged: the first mention of Ripples
+in a channel claims that channel, the claim is sticky, and a later mention elsewhere is answered
+by naming the current destination and the sentence that moves it. What has to change is the
+sentence the welcome message teaches, and the welcome message is the only place it appears.
+
+**The reasoning that no team can hold a roster without a destination is gone.** It read: the view
+lists nothing until someone declares the first item, so a team cannot have a roster and no
+destination. A board exists before anyone mentions Ripples anywhere, so a team can now hold a
+full sprint and no destination at all. The ruling survives on its other grounds — the claim fires
+at the moment of most knowledge, in the channel the squad actually reads, and the
+install-derived destination fails silently into General — but this particular argument no longer
+supports it.
+
+**Ticket 08's authorization conditional has fired.** This ruling said moving the destination needs
+no authorization on the same terms ticket 08 gave roster maintenance, and that if roster
+maintenance ever gained an authorization rule the destination move would take the same one. The
+set is now maintained by the team lead, in GitHub, under GitHub's own permissions. Whether that
+carries over to claiming or moving a channel is not settled here, and it belongs with the ticket
+that decides which board is a team's and who names it.
