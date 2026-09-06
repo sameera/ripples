@@ -322,3 +322,19 @@ maintenance ever gained an authorization rule the destination move would take th
 set is now maintained by the team lead, in GitHub, under GitHub's own permissions. Whether that
 carries over to claiming or moving a channel is not settled here, and it belongs with the ticket
 that decides which board is a team's and who names it.
+
+## Amendment — 2026-09-06, second
+
+Ticket 12 closed the hole the first amendment left. It ruled that a team's board is a playbook
+value, not a typed sentence, so no board-naming act replaces the roster add that used to claim a
+channel.
+
+**The claiming act is a bare mention, and this ruling already said so.** "A channel becomes a
+team's destination when someone mentions Ripples in it" needs nothing beyond a mention. The
+welcome message asks for one and teaches nothing else.
+
+**The authorization conditional is closed and resolves to nothing.** This ruling said the
+destination move would take whatever authorization rule item-set maintenance later gained. The
+set now lives on a GitHub board under GitHub's permissions and the board reference lives in the
+playbook under the deployment's, and neither has anything to say about a channel. Claiming and
+moving a destination stay unauthorized: any member of the channel, announced in the room.

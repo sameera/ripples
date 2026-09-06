@@ -271,3 +271,28 @@ failure modes and tests.
   a decision.
 
 - **Resolved by:** sameera on 2026-09-06
+
+## Amendment — 2026-09-06
+
+Ticket 08 was re-resolved: a team's item set is a GitHub project's current sprint, and ticket 12
+put the board reference in the team's playbook. That breaks one clause of this ruling.
+
+**"Check-ins run, nothing posts" is now scoped to a team that has a board and no destination.**
+This ruling described the unconfigured state as one where the valuable half still runs — the
+check-in happens, statements are recorded, the record accumulates — and only team surfacing is
+absent. That held when Ripples kept its own list of work items, because the check-in did not
+depend on team surfacing being configured. It does not hold for a board the check-in reads its
+questions from. A team with no board has no item set, so the check-in has no first question, so
+nothing runs for that team at all.
+
+**A team with no board is dormant, and that is ruled behaviour rather than a degradation.** The
+lead has ruled it: no board, no check-in. Ripples says so once in the claimed channel, states
+that it is the last message, and stays silent. The alternative — a check-in that opens anyway and
+asks something needing no work item — was refused, because designing a first-run question is the
+individual check-in conversation, which this discovery's destination places beyond it.
+
+**The two states are told apart by which surface can carry the notice.** A team with a board and
+no destination is this ticket's state, and it announces itself in the 1:1 preview turn every time
+the preview is shown, because a 1:1 exists. A team with a destination and no board has no 1:1 to
+announce anything in, so its notice lands in the channel. That is why it needed a mechanism of
+its own rather than a line in this one.

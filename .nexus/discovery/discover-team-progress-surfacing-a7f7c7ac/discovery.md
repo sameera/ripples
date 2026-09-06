@@ -40,6 +40,9 @@ integrations, and any public web presence.
 
 - **Which channel does a team's scheduled post land in, at what local hour, and who decides both?** — A channel becomes that team's destination when someone first mentions Ripples in it; the install event buys only a one-off welcome message, nobody is asked for the hour, and the post defaults to Monday late in the day from playbook values. Detail: `ticket-09-post-address-and-local-time.md`
 
+- **Which GitHub project and iteration is a team's, who names it, and with what authority?** — The board is a playbook value beside the cadence, resolved by one deployment-scoped read-only GitHub App and announced into the claimed channel on every load; the current sprint is derived and never stored, a project with no iteration field is refused rather than widened to its backlog, and a team with no board runs nothing at all. Detail: `ticket-12-which-board.md`
+
+
 ## Not yet specified
 
 - Whether a hosted page, if one is built, needs an identity and authorisation model of its
@@ -47,6 +50,24 @@ integrations, and any public web presence.
   whether a hosted page exists. [inferred]
 
 ## Out of scope
+
+- Restricting who may name a team's board, or who may claim and move a post destination, to a
+  team lead. Ruled out by the board resolution, which makes the board a change to the deployment
+  by whoever operates it and leaves the channel acts unauthorized. A lead role is a person-scoped
+  configuration surface, which ticket 04 already refused. [inferred]
+- Reading a team's board through a personal access token of either kind, and any per-team
+  credential. Ruled out by the board resolution in favour of one deployment-scoped read-only
+  GitHub App. [inferred]
+- Reading every open item in a project when it has no iteration field, and the ceiling,
+  truncation and paging an unbounded backlog would bring back. Ruled out by the board resolution,
+  which refuses the project and says why. [inferred]
+- An interface for editing a team's playbook. Already out of scope, and the board resolution
+  leans on it: a board changes by the same act that changes a cadence. [inferred]
+- Creating, installing, rotating and alarming on the deployment's GitHub App credential. It is
+  the same class of work as operating the Entra client credential, which is deployment operations
+  rather than surfacing. What is not out of scope is the choice of one deployment-scoped identity
+  over a per-person token, because it decides whether the weekly post renders the same for every
+  reader. [inferred]
 
 - A Power Automate Workflows incoming webhook as a delivery path for the team-wide view,
   whether as a declared lesser mode for a tenant that forbids the app or as an extra

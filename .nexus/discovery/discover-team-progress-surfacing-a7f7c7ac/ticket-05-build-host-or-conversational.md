@@ -3,7 +3,7 @@ title: "Which team-facing surfaces need a rendered UI we build and host, and whi
 type: council
 surface: "hosted page or chat message"
 status: open
-blocked_by: [ticket-01-teams-surface-inventory.md, ticket-02-team-view-content.md, ticket-03-individual-to-team-crossing.md, ticket-04-delivery-trigger-and-audience.md, ticket-06-channel-capability-floor.md, ticket-07-install-gate.md, ticket-08-team-view-item-set.md, ticket-09-post-address-and-local-time.md, ticket-10-roster-currency.md, ticket-11-assignee-to-person.md, ticket-12-which-board.md, ticket-13-board-unreadable.md]
+blocked_by: [ticket-01-teams-surface-inventory.md, ticket-02-team-view-content.md, ticket-03-individual-to-team-crossing.md, ticket-04-delivery-trigger-and-audience.md, ticket-06-channel-capability-floor.md, ticket-07-install-gate.md, ticket-08-team-view-item-set.md, ticket-09-post-address-and-local-time.md, ticket-10-roster-currency.md, ticket-11-assignee-to-person.md, ticket-12-which-board.md, ticket-13-board-unreadable.md, ticket-14-which-items-are-rows.md]
 claimed_by:
 claimed_at:
 ---
