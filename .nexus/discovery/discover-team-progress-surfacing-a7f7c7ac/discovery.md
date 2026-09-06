@@ -38,6 +38,8 @@ integrations, and any public web presence.
 
 - **Which work items does the team-wide view list, when nothing outside Ripples enumerates a project?** — The view lists a roster the team declares and maintains through typed messages in the channel the view lands in; a check-in never adds or removes an item, silence never removes one, and the roster is bounded when an item is added rather than truncated when the view is rendered. Detail: `ticket-08-team-view-item-set.md`
 
+- **Which channel does a team's scheduled post land in, at what local hour, and who decides both?** — A channel becomes that team's destination when someone first mentions Ripples in it; the install event buys only a one-off welcome message, nobody is asked for the hour, and the post defaults to Monday late in the day from playbook values. Detail: `ticket-09-post-address-and-local-time.md`
+
 ## Not yet specified
 
 - Whether a hosted page, if one is built, needs an identity and authorisation model of its
@@ -104,3 +106,15 @@ integrations, and any public web presence.
   names each roster item once, so nothing in the system needs to match anything. [inferred]
 - A page or a form for editing the roster. Ruled out by the roster resolution, which puts
   roster maintenance on the channel's inbound text path. [inferred]
+- An install-time configuration question for team surfacing — a channel picker, a setup
+  exchange, or any pending-setup state between installing the app and the first post. Ruled
+  out by the destination resolution. [inferred]
+- Naming the destination in a playbook file, and the channel-name resolver and directory read
+  a hand-authored channel name would need to become an identifier. Ruled out by the
+  destination resolution. [inferred]
+- Enumerating a team's channels to offer a list to pick from. The call costs nothing beyond
+  the bot credential the messaging endpoint already holds, and it is refused with the picker
+  it exists to serve. [inferred]
+- Serving more than one Microsoft tenant from one deployment. One deployment is one AWS
+  account, one bot registration and one tenant, and going multi-tenant is a different product
+  motion from the self-hosted one the product context commits to. [inferred]
