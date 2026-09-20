@@ -12,7 +12,9 @@ See [`README.md`](README.md) for the product argument and
 the v1 scope.
 
 **v2 is a clean slate.** The v1 tree (Nx monorepo, React 19, Fastify, DynamoDB) was removed
-in `b9389a0`. Do not carry v1 assumptions forward — it is not the v2 stack.
+in `b9389a0`. Do not carry v1 assumptions forward. Fastify is v2's HTTP framework by its own
+decision in [`docs/system/stack.md`](docs/system/stack.md), not by inheritance; everything
+else in that list is absent.
 
 ## Architecture
 
@@ -42,10 +44,10 @@ AgentCore Memory. Its persistence is not yet chosen.
 The project is not yet scaffolded. It will be a plain Node 22+ TypeScript project:
 
 ```bash
-npm install @strands-agents/sdk @aws-sdk/client-bedrock-agentcore express zod
+npm install @strands-agents/sdk @aws-sdk/client-bedrock-agentcore fastify zod
 ```
 
-Running locally means running the same Express server the container runs, with AWS
+Running locally means running the same Fastify server the container runs, with AWS
 credentials from the local profile. Update this section once the scaffold lands.
 
 ## Technical Patterns and Standards
