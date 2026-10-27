@@ -1,3 +1,5 @@
 # Pre-translation copies left behind by a failed `nexus prose-verify`.
 # Kept on purpose for diagnosis; never committed.
 *.pre
+
+.nexus/tmp
