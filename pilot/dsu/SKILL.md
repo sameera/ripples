@@ -27,24 +27,12 @@ Run the phases in order. Keep your messages short; the engineer has a stand-up t
     - Single-repo mode, or `nexus` is not installed → the repo containing the current directory
       (`git rev-parse --show-toplevel`) is the only repo.
     - For each repo, take its GitHub `owner/name` from `git -C <repo> remote get-url origin`.
-2. **Find the state folder.** `STATE = <hub>/.nexus/tmp/dsu`. Confirm `.nexus/tmp/` is ignored:
-   `git -C <hub> check-ignore -q .nexus/tmp/probe`. If it is not ignored, stop and tell the
-   engineer to add `.nexus/tmp/` to the hub's `.gitignore`. These files must never be committed.
-3. **Check `gh`.** `gh auth status`. If it fails, tell the engineer to run `! gh auth login` and stop.
+2. **Check `gh`.** `gh auth status`. If it fails, tell the engineer to run `! gh auth login` and stop.
    Get their login: `gh api user --jq .login`.
-4. **Fixture consent (first run only).** If `STATE/config.json` does not exist, ask once:
-
-    > This pilot can save each item's exchange (the candidate I offered, your words, my
-    > assessment, and any follow-up I asked) to `.nexus/tmp/dsu/fixtures/`, locally. It is used to
-    > test Ripples' update judgment. Nothing leaves your machine unless you share the file
-    > yourself. Save fixtures? (yes/no)
-
-   Write `{"fixtures": true|false, "login": "<login>"}` to `STATE/config.json`.
-5. **Set the window.**
+3. **Set the window.**
     - `--since` given → use it.
-    - Otherwise, the newest `STATE/reports/*.json` → its `finishedAt` is the start.
-    - No report yet → 00:00 local time on the previous working day (Monday → Friday).
-    - The window ends now. State it in one line, e.g. *"Covering Fri 7 Nov 09:12 → now."*
+    - Otherwise → 00:00 local time on the previous working day (Monday → Friday).
+    - The window ends now. State it in one line, e.g. *"Covering Fri 7 Nov 00:00 → now."*
 
 ## Phase 1 — Gather evidence (silently, in parallel)
 
@@ -58,8 +46,7 @@ Run these together. Do not show their raw output to the engineer.
 
     It needs Node 22.18 or later. It returns, per repo and session: title, branches, the
     engineer's prompts, the last few assistant conclusions, files changed and git/gh actions.
-    Treat this as private evidence. **Never quote a prompt or transcript text in the report or in
-    a fixture.** If the script fails, say so in one line and continue without sessions.
+    Treat this as private evidence. **Never quote a prompt or transcript text in the report.** If the script fails, say so in one line and continue without sessions.
 
 2. **Assigned issues**, per repo:
 
@@ -87,9 +74,6 @@ Run these together. Do not show their raw output to the engineer.
       `gh issue view`. Resolve a bare `#123` against the hub repo. If the hub has no such issue,
       list it under "could not resolve" and ask the engineer once, in Phase 2.
     - plain text → a local task, referred to by its text.
-
-5. **Yesterday's commitments.** Read the newest `STATE/reports/*.json`, if any, and take its
-   `nextSteps`.
 
 ## Phase 2 — Build the item list
 
@@ -124,8 +108,6 @@ Show **one compact message** with every item in play, numbered. For each:
   migration now runs end to end on staging?"* Offer a candidate only when the evidence supports
   one. With no evidence, ask: *"Anything change here, or no movement?"*
 
-Put yesterday's next steps first, each marked: *"Yesterday you planned: X. Done, moved, or dropped?"*
-
 Then list the **Unplanned** groups the same way, and end with:
 
 > Reply per number: `ok` to keep my wording, your own words, `no change`, or `skip`.
@@ -134,20 +116,16 @@ Then list the **Unplanned** groups the same way, and end with:
 Example:
 
 ```
-Covering Fri 7 Nov 09:12 → now.
-
-Planned yesterday
- 1. "Get the ingestion PR reviewed" — PR #41 was approved Monday.
-    → Done?
+Covering Fri 7 Nov 00:00 → now.
 
 Items
- 2. #33 DSU Submission API — PR #41 merged; 3 sessions on request validation.
+ 1. #33 DSU Submission API — PR #41 merged; 3 sessions on request validation.
     → "The submission endpoint is merged and validates the payload." Right?
- 3. #37 Fixture set — no activity.
+ 2. #37 Fixture set — no activity.
     → Anything change here, or no movement?
 
 Unplanned
- 4. CI cache fix in nexus — 1 session, 2 files changed.
+ 3. CI cache fix in nexus — 1 session, 2 files changed.
     → What changed?
 
 Reply per number: ok / your words / no change / skip.
@@ -262,35 +240,11 @@ Then ask: *"Want to change anything?"*
 
 The engineer always has the last word. Loop until they say it is done.
 
-## Phase 7 — Save and hand off
+## Phase 7 — Hand off
 
-1. Write `STATE/reports/<YYYY-MM-DD>.md` (the report text) and `STATE/reports/<YYYY-MM-DD>.json`:
+The skill writes no files. The report lives only in the block above.
 
-    ```json
-    {
-        "date": "YYYY-MM-DD",
-        "windowStart": "<ISO>",
-        "finishedAt": "<ISO now>",
-        "items": [{ "ref": "owner/name#33 | task text", "statement": "<engineer's words>", "verdict": "substantive | thin", "indicator": "state-change | blocker | revised-expectation | completion | abandonment | no-change | none" }],
-        "blockers": [{ "ref": "...", "what": "...", "owner": "...", "since": "...", "ask": "..." }],
-        "risks": [{ "ref": "...", "statement": "..." }],
-        "nextSteps": [{ "ref": "...", "statement": "..." }]
-    }
-    ```
-
-    A second run on the same day overwrites both files.
-
-2. If fixtures are on, append one line per item exchange to `STATE/fixtures/<YYYY-MM-DD>.jsonl`:
-
-    ```json
-    {"date":"YYYY-MM-DD","ref":"owner/name#33","candidate":"<your offered wording or null>","turns":[{"engineer":"<words>","verdict":"thin","indicator":"none","missing":"state change"},{"probe":"<your follow-up>"},{"engineer":"<words>","verdict":"substantive","indicator":"state-change"}],"final":"<text in report>","finalVerdict":"substantive","acceptedThin":false,"overrodeWarning":false,"keptCandidateVerbatim":false}
-    ```
-
-    `acceptedThin` = the item ended thin after the follow-up cap. `overrodeWarning` = the engineer
-    kept a version you warned about. `keptCandidateVerbatim` = they replied `ok` to your wording.
-    Fixtures hold the engineer's words and your words only — never session or transcript text.
-
-3. Copy the report text to the clipboard with the first available of `wl-copy`, `xclip -selection
+1. Copy the report text to the clipboard with the first available of `wl-copy`, `xclip -selection
    clipboard`, `pbcopy`, `clip.exe`. If none works, say the text is in the block above.
 
-4. End with one line: where the report was saved, and that it is on the clipboard.
+2. End with one line: the report is on the clipboard, or in the block above.
